@@ -1,0 +1,1 @@
+"""ChessJU FastAPI application package."""

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Local storage and database data
+storage/
+uploads/
+*.sqlite3
+
+# Legacy PocketBase artifacts present before ChessJU setup
+/pb_data/
+/pocketbase.exe
+/pocketbase_*.zip
+/CHANGELOG.md
+/LICENSE.md
+
+# Docker
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
