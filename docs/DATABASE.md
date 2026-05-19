@@ -157,3 +157,21 @@ error messages, and start/completion timestamps.
 `chesscom_imported_games` links a Chess.com public game URL to the ChessJU `games` row created from
 its PGN. URLs are unique to avoid duplicate imports. Imported games use `games.source =
 'chesscom_import'`, reuse `game_moves`, and create `pgn_imports.source = 'chesscom'`.
+
+Phase 11 chess clock tables:
+
+- `clock_sessions`
+- `clock_events`
+
+`clock_sessions` stores the current recoverable state of a casual or pairing-linked clock session:
+optional tournament and pairing links, player IDs, base/increment/delay settings, current remaining
+milliseconds, active color, status, result, creator, and lifecycle timestamps.
+
+`clock_events` stores an append-only event log for meaningful clock transitions. Events include
+setup, start, pause, resume, switch turn, adjust time, flag, reset, complete, and cancel. Each event
+stores the actor, remaining times, active color, optional client timestamp, server timestamp, and
+metadata.
+
+The backend does not store every clock tick. The client owns responsive ticking and sends snapshots
+only when important state transitions happen. Pairing-linked sessions are limited by service logic
+so a pairing cannot have two active setup/running/paused clock sessions at the same time.

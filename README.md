@@ -106,6 +106,14 @@ Chess.com sync uses only public read-only data. ChessJU never asks for Chess.com
 not scrape pages. Sync jobs run in the worker and imported PGNs reuse the existing game library,
 normalized move storage, and analysis endpoints.
 
+Chess clock backend:
+
+- Casual and pairing-linked clock sessions are supported.
+- The client runs the responsive timer locally.
+- The backend stores meaningful event snapshots such as start, pause, resume, switch turn, adjust,
+  flag, reset, complete, and cancel.
+- The backend does not receive every second or tick.
+
 Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
 AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
 
@@ -128,9 +136,10 @@ announcements, home content, time controls, tournaments, tournament registration
 manual rounds, manual pairings, result entry, linked tournament game records, basic tournament
 standings, the global JU leaderboard, PGN paste/upload, normalized game moves, authenticated game
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
-Stockfish analysis jobs through the worker, and Chess.com public game import. Chat, frontend code,
-automatic pairing, advanced tie-breaks, Lichess import, scheduled sync, and advanced game review
-behavior are intentionally delayed.
+Stockfish analysis jobs through the worker, Chess.com public game import, and chess clock sessions
+with append-only event logs. Chat, frontend code, automatic pairing, advanced tie-breaks, Lichess
+import, scheduled sync, realtime clock broadcast, and advanced game review behavior are
+intentionally delayed.
 
 ## Notes
 

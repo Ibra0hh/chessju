@@ -201,3 +201,32 @@ PGNs into the shared `games` and `game_moves` tables, creates `pgn_imports` with
 Imported Chess.com games appear in `GET /api/v1/games?source=chesscom_import` and can use the
 existing analysis endpoints. Sync tests mock Chess.com responses; the test suite does not depend on
 live network access.
+
+Phase 11 chess clock endpoints:
+
+- `POST /api/v1/clock/sessions`
+- `GET /api/v1/clock/sessions/{session_id}`
+- `GET /api/v1/clock/sessions/{session_id}/events`
+- `POST /api/v1/clock/sessions/{session_id}/start`
+- `POST /api/v1/clock/sessions/{session_id}/pause`
+- `POST /api/v1/clock/sessions/{session_id}/resume`
+- `POST /api/v1/clock/sessions/{session_id}/switch-turn`
+- `POST /api/v1/clock/sessions/{session_id}/adjust`
+- `POST /api/v1/clock/sessions/{session_id}/flag`
+- `POST /api/v1/clock/sessions/{session_id}/complete`
+- `POST /api/v1/clock/sessions/{session_id}/reset`
+- `POST /api/v1/clock/sessions/{session_id}/cancel`
+- `GET /api/v1/admin/clock/sessions`
+- `GET /api/v1/admin/clock/sessions/{session_id}`
+- `GET /api/v1/admin/clock/sessions/{session_id}/events`
+
+Chess clock sessions can be casual or linked to tournament pairings. Casual sessions are controlled
+by the creator. Pairing-linked official sessions are created and controlled by admins or super
+admins, while the paired players can view the session and event log.
+
+The clock runs on the Flutter client for responsiveness. The backend stores only meaningful
+snapshots: setup, start, pause, resume, switch turn, adjust time, flag, reset, complete, and cancel.
+It does not receive every second or tick.
+
+Clock event logs are append-only and returned oldest first. Mutation responses return the updated
+clock session with remaining time, active color, status, result, and timestamps.

@@ -4,6 +4,7 @@ from app.admin.router import router as admin_router
 from app.analysis.router import router as analysis_router
 from app.auth.router import router as auth_router
 from app.chesscom.router import router as chesscom_router
+from app.clock.router import router as clock_router
 from app.common.schemas import DatabaseHealthResponse, HealthResponse, VersionResponse
 from app.config import get_settings
 from app.database import check_database_connection
@@ -32,6 +33,7 @@ app.include_router(leaderboard_router, prefix=settings.api_v1_prefix)
 app.include_router(pgn_router, prefix=settings.api_v1_prefix)
 app.include_router(analysis_router, prefix=settings.api_v1_prefix)
 app.include_router(chesscom_router, prefix=settings.api_v1_prefix)
+app.include_router(clock_router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["operations"])

@@ -145,3 +145,22 @@ Not implemented yet:
 - automatic scheduled Chess.com sync
 - auto-analysis after import
 - frontend integration UI
+
+Phase 11 chess clock security rules:
+
+- Chess clock endpoints require authentication
+- Casual clock sessions can be viewed and controlled by their creator
+- Admin and super admin users can view and control every clock session
+- Pairing-linked official sessions can be created and controlled only by admins or super admins
+- Pairing players can view their official pairing clock session and event log
+- Non-player members cannot view official pairing-linked clock sessions
+- A pairing cannot have more than one active setup/running/paused clock session
+- The backend stores meaningful event snapshots only and must not receive every clock tick
+- Clock event logs are append-only; old events are not edited
+- Client-provided remaining times are validated as non-negative snapshots, not treated as secrets
+
+Not implemented yet:
+
+- Realtime clock broadcast
+- player-controlled official tournament clocks
+- clock anti-cheat or drift reconciliation

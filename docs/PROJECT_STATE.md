@@ -153,11 +153,23 @@ ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients 
 - No private Chess.com APIs
 - No scraping
 
+### Phase 11: Chess Clock Backend
+
+- Casual chess clock sessions
+- Pairing-linked official clock sessions
+- Tournament-linked clock metadata support
+- Clock session recovery state
+- Append-only clock event log
+- Start, pause, resume, switch-turn, adjust, flag, reset, complete, and cancel actions
+- Admin clock session listing
+- Pairing players can view official pairing clocks
+- Backend stores meaningful snapshots only, not every tick
+
 ## Current Database State
 
 Current Alembic head:
 
-- `0010_chesscom_import`
+- `0011_chess_clock_backend`
 
 Main database tables:
 
@@ -189,6 +201,8 @@ Main database tables:
 - `chesscom_accounts`
 - `chesscom_sync_jobs`
 - `chesscom_imported_games`
+- `clock_sessions`
+- `clock_events`
 
 ## Current API State
 
@@ -214,6 +228,7 @@ Endpoint groups currently implemented:
 - Game library and PGN endpoints
 - Analysis job/report endpoints
 - Chess.com integration endpoints
+- Chess clock session and event endpoints
 
 ## Current Worker And Queue State
 
@@ -229,9 +244,9 @@ Endpoint groups currently implemented:
 
 Latest known verification at this checkpoint:
 
-- pytest: `209 passed`
+- pytest: `240 passed`
 - Ruff: passed
-- Alembic current head: `0010_chesscom_import`
+- Alembic current head: `0011_chess_clock_backend`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -242,8 +257,8 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest Phase 10 commit: `5312ffe30ecc1940aa4ebb2affb0529551a1bb74`
-- Git status before creating this checkpoint: clean
+- Latest pre-Phase 11 checkpoint commit: `6031491380db4e54399d6e184bfe3214f82c6447`
+- Git status before Phase 11 implementation: clean
 
 ## Important Permanent Rules
 
@@ -258,13 +273,13 @@ Latest known verification at this checkpoint:
 - Do not ask for Chess.com passwords.
 - Do not store Chess.com credentials.
 - Do not scrape Chess.com pages.
+- Chess clock clients should send meaningful event snapshots only, not every tick.
 - Do not commit secrets.
 - Do not commit `.env`.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.
 
 ## Not Implemented Yet
 
-- Chess clock backend
 - Friends/chat
 - Flutter frontend
 - Automatic Swiss pairing
@@ -274,15 +289,16 @@ Latest known verification at this checkpoint:
 - External object storage
 - Push notifications
 - Scheduled Chess.com sync
+- Realtime clock broadcast
+- Player-controlled official tournament clocks
+- Clock drift reconciliation or anti-cheat logic
 
 ## Recommended Next Phase
 
-Recommended next phase: Phase 11, Chess Clock Backend.
+Recommended next phase should be approved explicitly before work starts.
 
-Reasoning:
+Candidate next areas:
 
-- It is a core chess app feature.
-- It is independent from Stockfish and Chess.com import.
-- It can support both casual use and tournament pairings.
-- The backend should store meaningful clock events only, not every tick.
-- A clock foundation can later connect to tournament pairings without changing the existing game library or analysis architecture.
+- Friends/chat if Ibrahim wants member social features next.
+- SSE/realtime hardening if tournament, analysis, and clock update delivery should be improved first.
+- Flutter client planning if the backend MVP should be exercised from the future app surface.
