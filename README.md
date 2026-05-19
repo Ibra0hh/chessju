@@ -10,7 +10,7 @@ The current priority is the backend foundation:
 - Separate Python worker process
 - Local filesystem storage first
 - Docker Compose local development
-- Flutter/Dart clients later
+- Flutter/Dart client foundation
 
 This project does not use Firebase, Supabase, Appwrite, PocketBase, or any backend-as-a-service as the core backend.
 
@@ -141,6 +141,22 @@ Backend hardening for Flutter integration:
 - `/health` is liveness, `/health/db` checks PostgreSQL, and `/health/valkey` checks Valkey.
 - See `docs/FLUTTER_API_GUIDE.md` and `docs/SMOKE_TESTS.md` before wiring a Flutter client.
 
+Flutter app foundation:
+
+- The Flutter app lives in `frontend/chessju_app`.
+- Web/Desktop local backend URL: `http://localhost:8001`
+- Android emulator local backend URL: `http://10.0.2.2:8001`
+- The app base URL is configurable with `--dart-define=CHESSJU_API_BASE_URL=...`.
+- See `docs/FLUTTER_APP.md` for app structure, run commands, auth flow, and current screens.
+
+Run Flutter checks:
+
+```powershell
+cd frontend/chessju_app
+flutter analyze
+flutter test
+```
+
 Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
 AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
 
@@ -164,10 +180,11 @@ manual rounds, manual pairings, result entry, linked tournament game records, ba
 standings, the global JU leaderboard, PGN paste/upload, normalized game moves, authenticated game
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
 Stockfish analysis jobs through the worker, Chess.com public game import, and chess clock sessions
-with append-only event logs, friends, blocking, direct conversations, direct text messages, and
-admin chat moderation listing, in-app notifications, and authenticated SSE events. Frontend code,
-automatic pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat,
-media messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, and
+with append-only event logs, friends, blocking, direct conversations, direct text messages, admin
+chat moderation listing, in-app notifications, authenticated SSE events, and a Flutter app
+foundation with API client, auth flow, routing, theme, and basic backend-backed screens. Automatic
+pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media
+messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, and
 advanced game review behavior are intentionally delayed.
 
 ## Notes

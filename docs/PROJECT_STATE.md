@@ -8,7 +8,8 @@ Checkpoint date: 2026-05-19
 - Owner: Ibrahim
 - Purpose: custom chess club platform for University of Jordan members
 
-ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients are planned later.
+ChessJU now has a backend MVP foundation and an initial Flutter/Dart app foundation. The Flutter
+client is intentionally simple and focused on connecting cleanly to the existing backend.
 
 ## Architecture
 
@@ -24,7 +25,7 @@ ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients 
 - Separate Python worker package for background jobs
 - Docker Compose local development environment
 - Local filesystem storage first
-- Flutter/Dart frontend later
+- Flutter/Dart frontend foundation under `frontend/chessju_app`
 
 ## Completed Phases
 
@@ -209,6 +210,36 @@ ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients 
 - Manual smoke-test guide
 - Public/admin security review documentation
 
+### Phase 15: Flutter App Foundation
+
+- Flutter project under `frontend/chessju_app`
+- Android, iOS, Web, and Windows desktop project scaffold
+- Configurable backend base URL
+- API client with bearer token and request ID support
+- Standard backend error envelope parsing
+- Pagination parsing helper
+- Secure token storage abstraction
+- Riverpod auth/session controller
+- Register, login, session check, and logout flow foundation
+- GoRouter routing
+- ChessJU Material 3 light/dark theme
+- Initial screens:
+  - Splash
+  - Login
+  - Register
+  - Home
+  - News list
+  - Tournament list
+  - Leaderboard
+  - Games placeholder
+  - Notifications
+  - Profile
+- Home screen consumes `GET /api/v1/home`
+- News, tournaments, leaderboard, notifications, unread count, and profile screens consume existing
+  backend endpoints
+- Realtime SSE service placeholder for later UI integration
+- Flutter app documentation in `docs/FLUTTER_APP.md`
+
 ## Current Database State
 
 Current Alembic head:
@@ -290,6 +321,7 @@ Endpoint groups currently implemented:
 - Admin notification and realtime event listing endpoints
 - Standard error responses with request IDs
 - Valkey health endpoint
+- Flutter app foundation routes and API client
 
 ## Current Worker And Queue State
 
@@ -301,6 +333,21 @@ Endpoint groups currently implemented:
 - Stockfish analysis jobs run in the worker
 - Chess.com sync jobs run in the worker
 
+## Current Flutter App State
+
+- Flutter project path: `frontend/chessju_app`
+- Backend base URL default: `http://localhost:8001`
+- Android emulator backend URL: `http://10.0.2.2:8001`
+- Main packages:
+  - `go_router`
+  - `dio`
+  - `flutter_riverpod`
+  - `flutter_secure_storage`
+  - `shared_preferences`
+  - `uuid`
+- Flutter analyze: passed at Phase 15 implementation time
+- Flutter test: passed at Phase 15 implementation time
+
 ## Current Test And Quality Status
 
 Latest known verification at this checkpoint:
@@ -308,6 +355,8 @@ Latest known verification at this checkpoint:
 - pytest: `306 passed`
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
+- Flutter analyze: passed
+- Flutter test: passed
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -318,8 +367,8 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 13 commit before Phase 14: `6f75be6871c018aeb64d0fd200e0d066402bed56`
-- Git status before Phase 14 implementation: clean
+- Latest completed Phase 14 commit before Phase 15: `f293d5d0572882752e089bf7295354034bd49a21`
+- Git status before Phase 15 implementation: clean
 
 ## Important Permanent Rules
 
@@ -346,10 +395,12 @@ Latest known verification at this checkpoint:
 - Do not commit secrets.
 - Do not commit `.env`.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.
+- Flutter must treat backend REST responses as authoritative.
+- Flutter must refetch official state after realtime hints.
 
 ## Not Implemented Yet
 
-- Flutter frontend
+- Full Flutter UI implementation beyond the app foundation
 - Automatic Swiss pairing
 - Automatic round-robin generation
 - Advanced tie-breaks
@@ -367,6 +418,9 @@ Latest known verification at this checkpoint:
 - Tournament chat
 - Media messages
 - End-to-end encrypted direct messages
+- Admin dashboard frontend
+- Deep-link routing for every detail page
+- Full SSE subscription UI
 
 ## Recommended Next Phase
 
@@ -374,6 +428,6 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- Flutter client planning if the backend MVP should be exercised from the future app surface.
-- Group or tournament chat if Ibrahim wants to extend social features beyond direct messages.
-- Automatic pairing if tournament operations should move beyond manual pairing.
+- Continue Flutter UI implementation for home, tournaments, game library, analysis, clock, and chat.
+- Build a dedicated Flutter admin dashboard when Ibrahim wants admin workflows outside OpenAPI.
+- Add automatic pairing if tournament operations should move beyond manual pairing.
