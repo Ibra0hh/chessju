@@ -489,6 +489,12 @@ class GameSummary {
     this.blackName,
     this.result,
     this.event,
+    this.site,
+    this.date,
+    this.round,
+    this.ecoCode,
+    this.openingName,
+    this.timeControl,
     this.playedAt,
     required this.createdAt,
     required this.movesCount,
@@ -500,6 +506,12 @@ class GameSummary {
   final String? blackName;
   final String? result;
   final String? event;
+  final String? site;
+  final String? date;
+  final String? round;
+  final String? ecoCode;
+  final String? openingName;
+  final String? timeControl;
   final String? playedAt;
   final String createdAt;
   final int movesCount;
@@ -512,6 +524,12 @@ class GameSummary {
       blackName: json['black_name']?.toString(),
       result: json['result']?.toString(),
       event: json['event']?.toString(),
+      site: json['site']?.toString(),
+      date: json['date']?.toString(),
+      round: json['round']?.toString(),
+      ecoCode: json['eco_code']?.toString(),
+      openingName: json['opening_name']?.toString(),
+      timeControl: json['time_control']?.toString(),
       playedAt: json['played_at']?.toString(),
       createdAt: json['created_at']?.toString() ?? '',
       movesCount: _asInt(json['moves_count']),

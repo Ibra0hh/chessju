@@ -1,5 +1,6 @@
 import 'package:chessju_app/core/storage/token_storage.dart';
 import 'package:chessju_app/features/auth/presentation/login_screen.dart';
+import 'package:chessju_app/features/games/presentation/pgn_import_screen.dart';
 import 'package:chessju_app/shared/widgets/content_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,5 +40,21 @@ void main() {
     );
 
     expect(find.text('Nothing here'), findsOneWidget);
+  });
+
+  testWidgets('PGN paste form validates non-empty input', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(MemoryTokenStorage()),
+        ],
+        child: const MaterialApp(home: Scaffold(body: PgnImportScreen())),
+      ),
+    );
+
+    await tester.tap(find.text('Import game'));
+    await tester.pump();
+
+    expect(find.text('Paste a PGN game first'), findsOneWidget);
   });
 }

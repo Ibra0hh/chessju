@@ -63,7 +63,7 @@ verification.
 
 ## Current App Foundation
 
-Implemented in Phases 15-16:
+Implemented in Phases 15-17:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
 - iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
@@ -85,6 +85,12 @@ Implemented in Phases 15-16:
 - Tournament rounds and standings sections
 - Notification read/read-all actions
 - Profile edit dialog for full name, University ID, and Chess.com username
+- Game library filters for all, tournament, PGN, and Chess.com imported games
+- Game detail screen with read-only board replay from FEN
+- Move navigation controls and selectable SAN move list
+- PGN paste import screen
+- Analysis request/status/report UI for existing Stockfish analysis endpoints
+- Basic move classification, centipawn loss, best move, and evaluation display
 
 ## Auth Flow
 
@@ -156,6 +162,8 @@ Current screens:
 - Tournament detail
 - Leaderboard
 - Games list
+- Game detail and replay board
+- PGN import
 - Notifications
 - Profile
 
@@ -176,6 +184,12 @@ Other screen endpoints:
 - Leaderboard: `GET /api/v1/leaderboard`
 - Seasons: `GET /api/v1/leaderboard/seasons`
 - Games: `GET /api/v1/games`
+- Game detail: `GET /api/v1/games/{game_id}`
+- PGN paste: `POST /api/v1/games/pgn/paste`
+- Analysis request: `POST /api/v1/games/{game_id}/analysis`
+- Game analysis state: `GET /api/v1/games/{game_id}/analysis`
+- Analysis job: `GET /api/v1/analysis/jobs/{job_id}`
+- Analysis report: `GET /api/v1/analysis/reports/{report_id}`
 - Notifications: `GET /api/v1/notifications`
 - Unread count: `GET /api/v1/notifications/unread-count`
 - Mark notification read: `POST /api/v1/notifications/{notification_id}/read`
@@ -197,21 +211,31 @@ and refetch full REST state after important events.
 
 ## Placeholders
 
+Game library and analysis-board behavior:
+
+- The board is read-only and is rendered from backend FEN data.
+- Users can jump to the start, previous move, next move, final move, or a selected SAN move.
+- The latest move is highlighted from UCI coordinates when available.
+- PGN paste is implemented. File upload remains a future UI extension while backend support already exists.
+- Analysis can be requested from a game detail screen.
+- Queued/running/failed/completed analysis states are shown, with manual refresh for job status.
+- Completed reports show approximate accuracies, classification counts, selected-move evaluation, centipawn loss, best move, and principal variation data.
+
 Still placeholder or future UI work:
 
-- Game detail UI
-- PGN paste/upload UI
-- Analysis report UI
+- PGN file upload UI
 - Chess.com import UI
 - Chess clock UI
 - Friends/direct chat UI
 - SSE event consumption
 - Admin dashboard UI
+- Draggable board input
+- Engine arrows
+- Evaluation graph
 
 ## Recommended Next Flutter Phase
 
 Recommended next UI phase:
 
-- Build the game detail and analysis-board UI using `games`, `game_moves`, and analysis report data.
-- Add PGN paste/upload forms once the game detail screen exists.
-- Add clock and chat UI after the core chess game review surface is usable.
+- Add Chess.com import, chess clock, or friends/direct chat UI after Ibrahim chooses the next product slice.
+- Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.

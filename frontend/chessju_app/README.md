@@ -36,3 +36,13 @@ Current vertical slice:
 - Tournament registration/cancellation
 - Notification read/read-all
 - Profile edit for full name, University ID, and Chess.com username
+- Game library filtering by source
+- Game detail with read-only FEN board replay
+- PGN paste import
+- Stockfish analysis request/status/report display
+
+Current game-review limitations:
+
+- PGN file upload UI is not implemented yet, though the backend endpoint exists.
+- The board is replay-only; there is no draggable move input.
+- Engine arrows and evaluation graph are not implemented yet.

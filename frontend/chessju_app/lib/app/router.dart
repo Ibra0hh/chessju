@@ -1,7 +1,9 @@
 import 'package:chessju_app/features/auth/presentation/login_screen.dart';
 import 'package:chessju_app/features/auth/presentation/register_screen.dart';
 import 'package:chessju_app/features/auth/presentation/splash_screen.dart';
+import 'package:chessju_app/features/games/presentation/game_detail_screen.dart';
 import 'package:chessju_app/features/games/presentation/games_screen.dart';
+import 'package:chessju_app/features/games/presentation/pgn_import_screen.dart';
 import 'package:chessju_app/features/home/presentation/home_screen.dart';
 import 'package:chessju_app/features/leaderboard/presentation/leaderboard_screen.dart';
 import 'package:chessju_app/features/news/presentation/news_detail_screen.dart';
@@ -57,6 +59,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/games',
             builder: (context, state) => const GamesScreen(),
+          ),
+          GoRoute(
+            path: '/games/import-pgn',
+            builder: (context, state) => const PgnImportScreen(),
+          ),
+          GoRoute(
+            path: '/games/:gameId',
+            builder: (context, state) =>
+                GameDetailScreen(gameId: state.pathParameters['gameId'] ?? ''),
           ),
           GoRoute(
             path: '/notifications',

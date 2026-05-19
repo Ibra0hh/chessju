@@ -259,6 +259,21 @@ client is intentionally simple and focused on connecting cleanly to the existing
   leaderboard, games, notifications, and preferences
 - Flutter tests expanded for login validation, model parsing, shared states, and token storage
 
+### Phase 17: Flutter Game Library And Analysis Board UI
+
+- Game library filters for all games, tournament games, PGN uploads, and Chess.com imports
+- Game detail screen connected to `GET /api/v1/games/{game_id}`
+- Read-only chess board replay from backend FEN data
+- First, previous, next, final, and move-list jump controls
+- Last-move highlighting from UCI coordinates
+- PGN metadata and SAN move list display
+- PGN paste screen connected to `POST /api/v1/games/pgn/paste`
+- Analysis request action connected to `POST /api/v1/games/{game_id}/analysis`
+- Analysis status and report display connected to existing analysis endpoints
+- Approximate accuracy, classification counts, selected-move evaluation, centipawn loss, best move,
+  and principal variation shown when an analysis report exists
+- PGN file upload, engine arrows, evaluation graph, and draggable board input intentionally delayed
+
 ## Current Database State
 
 Current Alembic head:
@@ -342,6 +357,7 @@ Endpoint groups currently implemented:
 - Valkey health endpoint
 - Flutter app foundation routes and API client
 - Flutter vertical-slice screens consuming backend content/authenticated endpoints
+- Flutter game library, PGN paste, game detail, board replay, and analysis report UI
 
 ## Current Worker And Queue State
 
@@ -368,8 +384,8 @@ Endpoint groups currently implemented:
   - `flutter_secure_storage`
   - `shared_preferences`
   - `uuid`
-- Flutter analyze: passed at Phase 15 implementation time
-- Flutter test: passed at Phase 15 implementation time
+- Flutter analyze: passed at Phase 17 implementation time
+- Flutter test: passed at Phase 17 implementation time
 - Current vertical slice consumes:
   - `/api/v1/home`
   - `/api/v1/news`
@@ -383,6 +399,11 @@ Endpoint groups currently implemented:
   - `/api/v1/leaderboard`
   - `/api/v1/leaderboard/seasons`
   - `/api/v1/games`
+  - `/api/v1/games/{game_id}`
+  - `/api/v1/games/pgn/paste`
+  - `/api/v1/games/{game_id}/analysis`
+  - `/api/v1/analysis/jobs/{job_id}`
+  - `/api/v1/analysis/reports/{report_id}`
   - `/api/v1/notifications`
   - `/api/v1/notifications/unread-count`
   - `/api/v1/notifications/{notification_id}/read`
@@ -398,7 +419,7 @@ Latest known verification at this checkpoint:
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Flutter analyze: passed
-- Flutter test: passed
+- Flutter test: `15 passed`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -409,8 +430,9 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 14 commit before Phase 15: `f293d5d0572882752e089bf7295354034bd49a21`
-- Git status before Phase 15 implementation: clean
+- Latest completed Phase 16 commit before Phase 17:
+  `922c48f5202b9c05a828c9069a5c8786e802bd32`
+- Git status before Phase 17 implementation: clean
 
 ## Important Permanent Rules
 
@@ -463,11 +485,13 @@ Latest known verification at this checkpoint:
 - Admin dashboard frontend
 - Deep-link routing for every detail page
 - Full SSE subscription UI
-- Game detail and analysis-board UI
-- PGN paste/upload UI
+- PGN file upload UI
 - Chess.com import UI
 - Chess clock UI
 - Friends/direct chat UI
+- Draggable board input
+- Engine arrows
+- Evaluation graph
 
 ## Recommended Next Phase
 
@@ -475,7 +499,8 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- Build the Flutter game detail and analysis-board UI.
-- Add PGN paste/upload UI after game detail is usable.
+- Add Chess.com import, chess clock, or friends/direct chat UI after Ibrahim chooses the next product
+  slice.
+- Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.
 - Build a dedicated Flutter admin dashboard when Ibrahim wants admin workflows outside OpenAPI.
 - Add automatic pairing if tournament operations should move beyond manual pairing.

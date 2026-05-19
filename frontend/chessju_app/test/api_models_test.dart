@@ -2,6 +2,7 @@ import 'package:chessju_app/core/errors/api_error.dart';
 import 'package:chessju_app/core/pagination/pagination.dart';
 import 'package:chessju_app/core/storage/token_storage.dart';
 import 'package:chessju_app/features/auth/data/auth_models.dart';
+import 'package:chessju_app/features/games/data/game_models.dart';
 import 'package:chessju_app/shared/models/content_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -160,6 +161,114 @@ void main() {
 
     expect(notification.type, 'message.received');
     expect(notification.readAt, isNull);
+  });
+
+  test('GameDetail parses backend game detail response', () {
+    final game = GameDetail.fromJson({
+      'id': 'g1',
+      'source': 'pgn_upload',
+      'white_name': 'Ibrahim',
+      'black_name': 'Guest',
+      'result': '1-0',
+      'event': 'Casual',
+      'site': 'Amman',
+      'date': '2026.05.19',
+      'round': '1',
+      'eco_code': 'C20',
+      'opening_name': 'King Pawn Game',
+      'time_control': '600',
+      'played_at': '2026-05-19T12:00:00Z',
+      'created_at': '2026-05-19T12:10:00Z',
+      'moves_count': 2,
+      'metadata': {'Event': 'Casual', 'Result': '1-0'},
+      'initial_fen': standardInitialFen,
+      'final_fen':
+          'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+      'moves': [
+        {
+          'id': 'm1',
+          'ply_number': 1,
+          'move_number': 1,
+          'side': 'white',
+          'san': 'e4',
+          'uci': 'e2e4',
+          'fen_before': standardInitialFen,
+          'fen_after':
+              'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1',
+          'is_check': false,
+          'is_checkmate': false,
+        },
+      ],
+    });
+
+    expect(game.whiteName, 'Ibrahim');
+    expect(game.ecoCode, 'C20');
+    expect(game.metadata['Event'], 'Casual');
+    expect(game.moves.single.san, 'e4');
+    expect(game.moves.single.uci, 'e2e4');
+    expect(game.playableInitialFen, standardInitialFen);
+  });
+
+  test('AnalysisJob parses queued/running/completed statuses', () {
+    final job = AnalysisJob.fromJson({
+      'id': 'j1',
+      'game_id': 'g1',
+      'status': 'queued',
+      'engine_name': 'stockfish',
+      'engine_version': null,
+      'depth': 10,
+      'time_limit_ms': null,
+      'created_at': '2026-05-19T12:00:00Z',
+      'started_at': null,
+      'completed_at': null,
+      'error_message': null,
+    });
+
+    expect(job.status, 'queued');
+    expect(job.isActive, isTrue);
+    expect(job.depth, 10);
+  });
+
+  test('AnalysisReport parses move evaluations', () {
+    final report = AnalysisReport.fromJson({
+      'id': 'r1',
+      'game_id': 'g1',
+      'analysis_job_id': 'j1',
+      'white_accuracy': 88.5,
+      'black_accuracy': 72,
+      'summary': {
+        'total_moves': 1,
+        'white': {'best': 1},
+        'black': {'mistake': 1},
+      },
+      'final_evaluation': {'type': 'cp', 'value': 35, 'display': '+0.35'},
+      'created_at': '2026-05-19T12:00:00Z',
+      'moves': [
+        {
+          'id': 'e1',
+          'game_move_id': 'm1',
+          'ply_number': 1,
+          'move_number': 1,
+          'side': 'white',
+          'san': 'e4',
+          'uci': 'e2e4',
+          'evaluation_before': {'type': 'cp', 'value': 20},
+          'evaluation_after': {'type': 'cp', 'value': 35, 'display': '+0.35'},
+          'best_move_uci': 'e2e4',
+          'best_move_san': 'e4',
+          'principal_variation': ['e2e4', 'e7e5'],
+          'centipawn_loss': 0,
+          'classification': 'best',
+          'created_at': '2026-05-19T12:00:00Z',
+        },
+      ],
+    });
+
+    expect(report.whiteAccuracy, 88.5);
+    expect(report.finalEvaluation?.label, '+0.35');
+    expect(report.moves.single.classification, 'best');
+    expect(report.moves.single.principalVariation.length, 2);
+    expect(analysisClassificationLabel('inaccuracy'), 'Inaccuracy');
   });
 
   test('MemoryTokenStorage saves and clears tokens', () async {
