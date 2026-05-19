@@ -40,6 +40,19 @@ The backup file is written under `backups/` with a timestamped name:
 backups/chessju-postgres-YYYYMMDD-HHMMSS.dump
 ```
 
+For the Phase 24 local production dry run, target the isolated Compose project:
+
+```powershell
+$env:COMPOSE_PROJECT_NAME = "chessju_prod_dryrun"
+.\infra\backup\backup_postgres.ps1 `
+  -EnvFile ".env.production.local" `
+  -ComposeFile "infra/docker-compose.prod.yml" `
+  -BackupDir "backups\dry-run"
+```
+
+Phase 24 dry-run result: a timestamped custom-format Postgres dump was created under
+`backups/dry-run/`, and Git ignored it through the `backups/` rule.
+
 ## Linux/macOS Backup
 
 ```sh
@@ -85,6 +98,10 @@ Do not test restore first on production. Use a disposable local or staging-like 
 3. Run migrations if needed.
 4. Run health checks and the API smoke script.
 5. Verify key admin and member flows.
+
+Phase 24 did not run destructive restore automatically. To dry-run restore safely later, create a
+fresh isolated Compose project and restore into that empty database, not into active dev or
+production data.
 
 ## Local Storage Backup Notes
 

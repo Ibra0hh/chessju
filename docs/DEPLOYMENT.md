@@ -204,3 +204,132 @@ These are safe and do not deploy to a real server:
 docker compose -f infra/docker-compose.prod.yml config
 docker compose -f infra/docker-compose.dev.yml config
 ```
+
+## 14. Local Production Dry Run
+
+Phase 24 verified the production stack locally without deploying to a real server. Use a separate
+project name so the dry-run containers and volumes do not overlap with the dev stack.
+
+Create a local-only env file:
+
+```powershell
+Copy-Item .env.production.example .env.production.local
+```
+
+Edit `.env.production.local` for local dry run:
+
+```env
+CADDY_SITE_ADDRESS=http://localhost
+CADDY_HTTP_PORT=8088
+CADDY_HTTPS_PORT=8443
+CHESSJU_CORS_ALLOWED_ORIGINS=http://localhost:8088,http://localhost:8001,http://localhost:5173
+```
+
+`.env.production.local` is ignored by Git through `.env.*`. Do not commit it.
+
+Validate config:
+
+```powershell
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml config
+```
+
+Start the dry-run stack:
+
+```powershell
+$env:PATH = "C:\Program Files\Docker\Docker\resources\bin;" + $env:PATH
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml up --build -d
+```
+
+If port `80` conflicts or requires elevated permissions, keep `CADDY_HTTP_PORT=8088` and use:
+
+```text
+http://localhost:8088
+```
+
+Run migrations in the production-style API container:
+
+```powershell
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml exec -T api alembic upgrade head
+
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml exec -T api alembic current
+```
+
+Expected current head:
+
+```text
+0013_realtime_notifications (head)
+```
+
+Check Caddy reverse proxy and health:
+
+```powershell
+Invoke-RestMethod http://localhost:8088/health
+Invoke-RestMethod http://localhost:8088/version
+Invoke-RestMethod http://localhost:8088/health/db
+Invoke-RestMethod http://localhost:8088/health/valkey
+```
+
+Seed only the isolated local dry-run database when you need admin/demo flows:
+
+```powershell
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml exec -T api `
+  env CHESSJU_ENVIRONMENT=local python scripts/seed_demo_data.py --yes
+```
+
+The `CHESSJU_ENVIRONMENT=local` override is intentionally limited to this one seed command. Do not
+use it for a real production database.
+
+Run smoke tests through Caddy:
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe scripts\smoke_test_api.py `
+  --base-url http://localhost:8088 `
+  --member-email member4@example.com `
+  --member-password ChangeMe123! `
+  --friend-email member5@example.com `
+  --friend-password ChangeMe123! `
+  --admin-email admin@example.com `
+  --admin-password ChangeMe123!
+```
+
+Stop the dry-run stack when finished:
+
+```powershell
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml down
+```
+
+Use `down -v` only when you intentionally want to remove dry-run volumes.
+
+## 15. Release Candidate Tag
+
+After all checks pass and the worktree is clean:
+
+```powershell
+git tag -a v0.1.0-rc1 -m "ChessJU v0.1.0 release candidate 1"
+git push origin v0.1.0-rc1
+```
+
+Do not create a GitHub Release until Ibrahim approves it.
+
+## 16. Known Deployment Follow-Ups
+
+- No real server has been deployed yet.
+- No production domain has been configured yet.
+- Flutter web uses compile-time API base URL via `--dart-define`.
+- Off-server backup storage is not configured yet.
+- Restore procedure is documented and guarded, but should be tested on a disposable environment
+  before real production use.
+- Production monitoring is not configured yet.

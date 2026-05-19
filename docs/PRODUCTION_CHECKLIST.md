@@ -43,12 +43,14 @@ Use this checklist before any real production deployment.
 ## Runtime Checks
 
 - [ ] `docker compose --env-file .env.production -f infra/docker-compose.prod.yml config` passes
+- [ ] local dry-run config passes with `-p chessju_prod_dryrun`
+- [ ] local dry-run stack starts without colliding with the dev stack
 - [ ] `docker compose --env-file .env.production -f infra/docker-compose.prod.yml ps` is healthy
 - [ ] `/health` passes
 - [ ] `/version` passes
 - [ ] `/health/db` passes
 - [ ] `/health/valkey` passes
-- [ ] API smoke tests pass against the target environment
+- [ ] API smoke tests pass through Caddy against the target environment
 - [ ] worker is running
 - [ ] Stockfish path is valid in the worker
 
@@ -72,6 +74,8 @@ Use this checklist before any real production deployment.
 - [ ] latest backend tests pass
 - [ ] latest Ruff check passes
 - [ ] latest Flutter analyze/test/build web pass
+- [ ] production-style dry-run passes locally
+- [ ] release candidate tag is pushed only after dry-run passes
 - [ ] rollback plan is written
 - [ ] backup taken immediately before deployment
 - [ ] Ibrahim explicitly approved deploying to the real server

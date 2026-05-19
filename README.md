@@ -138,6 +138,17 @@ Validate production compose locally without starting it:
 docker compose -f infra/docker-compose.prod.yml config
 ```
 
+Run an isolated local production dry run through Caddy on port `8088`:
+
+```powershell
+docker compose -p chessju_prod_dryrun `
+  --env-file .env.production.local `
+  -f infra/docker-compose.prod.yml up --build -d
+```
+
+Then verify `http://localhost:8088/health` and run the smoke script against
+`http://localhost:8088`. See `docs/DEPLOYMENT.md` for the complete dry-run command sequence.
+
 Do not commit `.env.production`, backup files, database dumps, or real secrets. Do not deploy to a
 real paid server until Ibrahim explicitly approves it.
 

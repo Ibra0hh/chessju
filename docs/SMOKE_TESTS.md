@@ -83,6 +83,25 @@ count, and admin identity/audit logs when admin credentials are provided.
 Admin sections are skipped when admin credentials are omitted. Existing friend relationships are
 handled as a non-failing skip so the script can be run repeatedly against seeded data.
 
+## Production-Style Dry-Run Smoke
+
+When the Phase 24 dry-run stack is running through Caddy on port `8088`, run:
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe scripts\smoke_test_api.py `
+  --base-url http://localhost:8088 `
+  --member-email member4@example.com `
+  --member-password ChangeMe123! `
+  --friend-email member5@example.com `
+  --friend-password ChangeMe123! `
+  --admin-email admin@example.com `
+  --admin-password ChangeMe123!
+```
+
+The dry-run smoke test should pass through Caddy, not the direct API container port. Phase 24
+verified `25/25 non-failing` checks against `http://localhost:8088`.
+
 ## 1. Health Checks
 
 ```powershell

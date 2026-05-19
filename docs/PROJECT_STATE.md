@@ -405,6 +405,30 @@ and focused on connecting cleanly to the existing backend.
 - No real server deployment was performed
 - No external object storage or push notifications were added
 
+### Phase 24: Production Dry Run Release Candidate
+
+- Local ignored `.env.production.local` dry-run file was created from the production template
+- Production compose config was validated with project name `chessju_prod_dryrun`
+- Production-style stack was started locally without touching a real server
+- Caddy reverse proxy was verified at `http://localhost:8088`
+- API, worker, Postgres, Valkey, and Caddy all ran in the dry-run stack
+- Alembic migrations ran inside the production-style API container
+- Alembic current head was confirmed as `0013_realtime_notifications`
+- Health endpoints passed through Caddy:
+  - `/health`
+  - `/version`
+  - `/health/db`
+  - `/health/valkey`
+- Demo data was seeded only into the isolated dry-run database
+- API smoke script passed through Caddy with `25/25 non-failing` checks
+- Postgres backup script created a timestamped dry-run dump under `backups/dry-run/`
+- Backup output was confirmed ignored by Git
+- Restore was not run destructively; restore dry-run procedure remains documented for a disposable
+  environment
+- Flutter web build was verified
+- Release candidate tag process was documented
+- No real server deployment was performed
+
 ## Current Database State
 
 Current Alembic head:
@@ -497,6 +521,7 @@ Endpoint groups currently implemented:
 - Local demo seed and API smoke-test scripts for release-candidate QA
 - Production compose, Caddy, environment template, backup/restore scripts, deployment docs, and
   production checklist
+- Local production dry-run validation and release-candidate tag documentation
 
 ## Current Worker And Queue State
 
@@ -662,6 +687,7 @@ Latest known verification at this checkpoint:
 - Full Flutter UI implementation beyond the current vertical slice
 - Advanced tie-breaks
 - Real server production deployment
+- GitHub Release publication
 - Production monitoring stack
 - External object storage
 - Push notifications
