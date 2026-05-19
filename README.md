@@ -114,6 +114,14 @@ Chess clock backend:
   flag, reset, complete, and cancel.
 - The backend does not receive every second or tick.
 
+Friends and direct chat backend:
+
+- Users can send, accept, reject, and cancel friend requests.
+- Friendships are stored as normalized pairs.
+- Blocking cancels pending requests and removes existing friendships.
+- Direct conversations require friendship and are text-only in this phase.
+- Message deletion is soft deletion, and deleted message bodies are hidden from normal responses.
+
 Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
 AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
 
@@ -137,9 +145,10 @@ manual rounds, manual pairings, result entry, linked tournament game records, ba
 standings, the global JU leaderboard, PGN paste/upload, normalized game moves, authenticated game
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
 Stockfish analysis jobs through the worker, Chess.com public game import, and chess clock sessions
-with append-only event logs. Chat, frontend code, automatic pairing, advanced tie-breaks, Lichess
-import, scheduled sync, realtime clock broadcast, and advanced game review behavior are
-intentionally delayed.
+with append-only event logs, friends, blocking, direct conversations, direct text messages, and
+admin chat moderation listing. Frontend code, automatic pairing, advanced tie-breaks, Lichess
+import, scheduled sync, group chat, tournament chat, media messages, push notifications, full
+realtime chat delivery, and advanced game review behavior are intentionally delayed.
 
 ## Notes
 

@@ -164,3 +164,27 @@ Not implemented yet:
 - Realtime clock broadcast
 - player-controlled official tournament clocks
 - clock anti-cheat or drift reconciliation
+
+Phase 12 friends and direct chat security rules:
+
+- Friend, block, conversation, and message endpoints require authentication
+- Users cannot send friend requests to themselves
+- Users cannot block themselves
+- Friend requests are rejected when either user has blocked the other
+- Direct conversations require an existing friendship
+- Direct conversations are blocked when either user has blocked the other
+- Only conversation members can list, view, read, or send messages
+- Message bodies are text-only and limited to 2000 characters
+- Message deletion is soft deletion through `deleted_at`
+- Deleted messages do not expose body content in normal user responses
+- Admin and super admin users can list social/chat records for moderation
+- Admin deletion of another user's message writes `message.admin_deleted` to the audit log
+
+Not implemented yet:
+
+- group chat
+- tournament chat
+- media messages
+- push notifications
+- full realtime chat delivery
+- end-to-end encryption

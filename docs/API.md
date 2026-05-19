@@ -230,3 +230,41 @@ It does not receive every second or tick.
 
 Clock event logs are append-only and returned oldest first. Mutation responses return the updated
 clock session with remaining time, active color, status, result, and timestamps.
+
+Phase 12 friends and direct chat endpoints:
+
+- `POST /api/v1/friends/requests`
+- `GET /api/v1/friends/requests`
+- `POST /api/v1/friends/requests/{request_id}/accept`
+- `POST /api/v1/friends/requests/{request_id}/reject`
+- `POST /api/v1/friends/requests/{request_id}/cancel`
+- `GET /api/v1/friends`
+- `DELETE /api/v1/friends/{user_id}`
+- `POST /api/v1/blocks`
+- `GET /api/v1/blocks`
+- `DELETE /api/v1/blocks/{blocked_id}`
+- `POST /api/v1/conversations/direct`
+- `GET /api/v1/conversations`
+- `GET /api/v1/conversations/{conversation_id}`
+- `GET /api/v1/conversations/{conversation_id}/messages`
+- `POST /api/v1/conversations/{conversation_id}/messages`
+- `POST /api/v1/conversations/{conversation_id}/read`
+- `DELETE /api/v1/messages/{message_id}`
+- `GET /api/v1/admin/social/friend-requests`
+- `GET /api/v1/admin/social/friendships`
+- `GET /api/v1/admin/chat/conversations`
+- `GET /api/v1/admin/chat/messages`
+
+Friend requests support pending, accepted, rejected, and cancelled states. Accepting a request
+creates a normalized friendship row. Blocking another user cancels pending requests in both
+directions and removes any existing friendship.
+
+Direct conversations are direct-only in Phase 12 and require friendship. Users can list and read
+only conversations they belong to. Messages are text-only, length-limited, and returned oldest first
+from the messages endpoint. Sender deletion is a soft delete; normal responses keep the message row
+but return `body: null` for deleted messages.
+
+Admin chat endpoints are read-only except message deletion through `DELETE /api/v1/messages/{id}`.
+When an admin deletes another user's message, ChessJU writes `message.admin_deleted` to the admin
+audit log. Full realtime chat, group chat, tournament chat, media messages, and push notifications
+are intentionally not implemented in Phase 12.

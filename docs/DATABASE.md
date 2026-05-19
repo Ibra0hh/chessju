@@ -175,3 +175,32 @@ metadata.
 The backend does not store every clock tick. The client owns responsive ticking and sends snapshots
 only when important state transitions happen. Pairing-linked sessions are limited by service logic
 so a pairing cannot have two active setup/running/paused clock sessions at the same time.
+
+Phase 12 friends and direct chat tables:
+
+- `friend_requests`
+- `friendships`
+- `blocked_users`
+- `conversations`
+- `conversation_members`
+- `messages`
+- `message_reads`
+
+`friend_requests` stores sender, receiver, status, creation time, and response time. Requests are
+unique per sender/receiver pair and are retained for history instead of hard-deleted.
+
+`friendships` stores one normalized row per friend pair. Service logic stores `user_a_id` and
+`user_b_id` deterministically, and the database checks `user_a_id < user_b_id` to prevent reversed
+duplicates.
+
+`blocked_users` stores blocker/blocked pairs. Blocking cancels pending friend requests in both
+directions and removes any existing friendship row.
+
+`conversations` and `conversation_members` store direct chat rooms and active membership. Phase 12
+supports only `type = direct` conversations between two friends.
+
+`messages` stores text and system messages with soft deletion through `deleted_at`. Deleted message
+bodies remain in PostgreSQL for moderation context but normal API responses return `body: null`.
+
+`message_reads` stores per-message read timestamps for each user. Phase 12 uses a simple
+conversation read operation that marks current conversation messages as read for the current user.

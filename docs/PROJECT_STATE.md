@@ -165,11 +165,25 @@ ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients 
 - Pairing players can view official pairing clocks
 - Backend stores meaningful snapshots only, not every tick
 
+### Phase 12: Friends And Direct Chat Backend
+
+- Friend requests
+- Friend acceptance, rejection, and cancellation
+- Normalized friendships
+- Blocking and unblocking users
+- Blocking cancels pending requests and removes existing friendship rows
+- Direct conversations between friends
+- Text-only direct messages
+- Conversation read state
+- Soft-deleted messages with sanitized user responses
+- Admin social/chat listing endpoints
+- Admin message moderation audit log action
+
 ## Current Database State
 
 Current Alembic head:
 
-- `0011_chess_clock_backend`
+- `0012_friends_direct_chat`
 
 Main database tables:
 
@@ -203,6 +217,13 @@ Main database tables:
 - `chesscom_imported_games`
 - `clock_sessions`
 - `clock_events`
+- `friend_requests`
+- `friendships`
+- `blocked_users`
+- `conversations`
+- `conversation_members`
+- `messages`
+- `message_reads`
 
 ## Current API State
 
@@ -229,6 +250,8 @@ Endpoint groups currently implemented:
 - Analysis job/report endpoints
 - Chess.com integration endpoints
 - Chess clock session and event endpoints
+- Friends, blocks, direct conversation, and message endpoints
+- Admin social/chat moderation listing endpoints
 
 ## Current Worker And Queue State
 
@@ -244,9 +267,9 @@ Endpoint groups currently implemented:
 
 Latest known verification at this checkpoint:
 
-- pytest: `240 passed`
+- pytest: `275 passed`
 - Ruff: passed
-- Alembic current head: `0011_chess_clock_backend`
+- Alembic current head: `0012_friends_direct_chat`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -257,8 +280,8 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest pre-Phase 11 checkpoint commit: `6031491380db4e54399d6e184bfe3214f82c6447`
-- Git status before Phase 11 implementation: clean
+- Latest Phase 11 commit: `77ca75beaf42d8d17db8e2ed17e1b9720b7f21c8`
+- Git status before Phase 12 implementation: clean
 
 ## Important Permanent Rules
 
@@ -274,13 +297,14 @@ Latest known verification at this checkpoint:
 - Do not store Chess.com credentials.
 - Do not scrape Chess.com pages.
 - Chess clock clients should send meaningful event snapshots only, not every tick.
+- Direct chat is member-only and text-only in Phase 12.
+- Message deletion must be soft deletion.
 - Do not commit secrets.
 - Do not commit `.env`.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.
 
 ## Not Implemented Yet
 
-- Friends/chat
 - Flutter frontend
 - Automatic Swiss pairing
 - Automatic round-robin generation
@@ -292,6 +316,12 @@ Latest known verification at this checkpoint:
 - Realtime clock broadcast
 - Player-controlled official tournament clocks
 - Clock drift reconciliation or anti-cheat logic
+- Group chat
+- Tournament chat
+- Media messages
+- Push notifications for chat
+- Full realtime chat delivery
+- End-to-end encrypted direct messages
 
 ## Recommended Next Phase
 
@@ -299,6 +329,6 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- Friends/chat if Ibrahim wants member social features next.
 - SSE/realtime hardening if tournament, analysis, and clock update delivery should be improved first.
+- Group or tournament chat if Ibrahim wants to extend social features beyond direct messages.
 - Flutter client planning if the backend MVP should be exercised from the future app surface.
