@@ -7,8 +7,65 @@ Phase 1 operational endpoints:
 - `GET /health`
 - `GET /version`
 - `GET /health/db`
+- `GET /health/valkey`
 
 Future domain APIs should use clear request and response schemas and should be designed for Flutter/Dart clients.
+
+Phase 14 API hardening conventions:
+
+All common API errors now use a predictable JSON shape:
+
+```json
+{
+  "error": {
+    "code": "resource.not_found",
+    "message": "Resource not found",
+    "details": {},
+    "request_id": "uuid-or-client-request-id"
+  }
+}
+```
+
+Every response includes `X-Request-ID`. Clients may send a safe `X-Request-ID` header for
+correlation; otherwise the API generates one. Validation errors use `validation.invalid_input`,
+auth failures use `auth.unauthorized` or `auth.forbidden`, conflicts use `resource.conflict`, rate
+limits use `rate_limit.exceeded`, and unexpected failures use `server.internal_error`.
+
+Most list endpoints currently return the established ChessJU shape:
+
+```json
+{
+  "items": [],
+  "limit": 20,
+  "offset": 0,
+  "total": 0
+}
+```
+
+The shared pagination helper documents the future preferred metadata shape:
+
+```json
+{
+  "items": [],
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "count": 20
+  }
+}
+```
+
+Existing endpoints keep their current list response shape for compatibility. Query validation
+enforces positive limits and non-negative offsets, with a typical maximum limit of `100`.
+
+CORS is environment-backed for Flutter web/admin local development. The local default allows
+localhost origins such as `http://localhost:5173`; do not use wildcard origins with credentials in
+production.
+
+Valkey-backed rate limiting is applied to login, registration, PGN paste/upload, analysis requests,
+Chess.com sync requests, and direct message sends. If Valkey is temporarily unavailable, the
+foundation fails open so the API remains usable locally, while Docker development uses the Valkey
+service.
 
 Phase 2 auth/user endpoints:
 

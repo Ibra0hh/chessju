@@ -212,3 +212,28 @@ Not implemented yet:
 - group chat realtime
 - tournament chat realtime
 - guaranteed distributed event delivery
+
+Phase 14 backend hardening rules:
+
+- Common API errors return `{ "error": { "code", "message", "details", "request_id" } }`
+- Error responses include `X-Request-ID` and do not expose stack traces, token values, password
+  hashes, token hashes, API keys, raw PGN, or internal filesystem paths
+- Request ID middleware accepts safe incoming `X-Request-ID` values or generates a UUID
+- CORS origins are environment-configured and should remain explicit when credentials are enabled
+- Do not configure wildcard CORS origins with credentials in production
+- Valkey-backed rate limiting protects login, register, PGN import, analysis request, Chess.com
+  sync request, and direct message send paths
+- Rate-limit keys are IP-based for unauthenticated auth endpoints and user-based for authenticated
+  expensive or abuse-prone endpoints
+- `/health` is process liveness and does not depend on PostgreSQL or Valkey
+- `/health/db` checks PostgreSQL readiness
+- `/health/valkey` checks Valkey readiness
+- OpenAPI tags are organized by backend domain for easier Flutter integration
+
+Security review notes:
+
+- `.env` remains ignored and must not be committed
+- Public endpoints continue to hide draft, deleted, private, or unauthorized records
+- Admin endpoints continue to require `admin` or `super_admin`
+- Object-level authorization remains enforced for user-owned games, sync jobs, notifications,
+  conversations, clock sessions, and analysis reports

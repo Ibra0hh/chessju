@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.analysis.schemas import (
@@ -20,10 +20,12 @@ from app.analysis.services import (
     request_game_analysis,
 )
 from app.auth.dependencies import get_current_user, require_admin
+from app.common.rate_limit import enforce_user_rate_limit
+from app.config import get_settings
 from app.database import get_db_session
 from app.users.models import User
 
-router = APIRouter(tags=["analysis"])
+router = APIRouter(tags=["Analysis"])
 
 
 @router.post(
@@ -34,9 +36,18 @@ router = APIRouter(tags=["analysis"])
 async def create_game_analysis(
     game_id: uuid.UUID,
     payload: AnalysisRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> AnalysisJobResponse:
+    settings = get_settings()
+    await enforce_user_rate_limit(
+        request,
+        user=current_user,
+        scope="analysis",
+        limit=settings.rate_limit_analysis_per_hour,
+        window_seconds=3600,
+    )
     return await request_game_analysis(
         session=session,
         user=current_user,

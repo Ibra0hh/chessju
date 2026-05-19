@@ -131,6 +131,16 @@ Realtime and in-app notifications:
 - `GET /api/v1/realtime/stream` provides authenticated SSE events for user-targeted updates.
 - SSE payloads are small hints; Flutter clients should refetch REST resources for full state.
 
+Backend hardening for Flutter integration:
+
+- Common API errors return `{ "error": { "code", "message", "details", "request_id" } }`.
+- Every response includes `X-Request-ID`; clients may send their own safe request ID.
+- CORS is configured with `CHESSJU_CORS_ALLOWED_ORIGINS` and related settings.
+- Valkey-backed rate limits protect login, register, PGN import, analysis, Chess.com sync, and
+  direct message endpoints.
+- `/health` is liveness, `/health/db` checks PostgreSQL, and `/health/valkey` checks Valkey.
+- See `docs/FLUTTER_API_GUIDE.md` and `docs/SMOKE_TESTS.md` before wiring a Flutter client.
+
 Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
 AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
 

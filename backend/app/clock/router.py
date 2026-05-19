@@ -39,7 +39,7 @@ from app.clock.services import (
 from app.database import get_db_session
 from app.users.models import User
 
-router = APIRouter(tags=["clock"])
+router = APIRouter(tags=["Clock"])
 
 
 @router.post(

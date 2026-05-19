@@ -7,7 +7,7 @@ from app.files.schemas import FileMetadataResponse, FileType
 from app.files.services import create_admin_file_upload
 from app.users.models import User
 
-router = APIRouter(tags=["files"])
+router = APIRouter(tags=["Files"])
 
 
 def _client_ip(request: Request) -> str | None:

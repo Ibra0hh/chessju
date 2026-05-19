@@ -20,7 +20,7 @@ from app.realtime.services import (
 )
 from app.users.models import User
 
-router = APIRouter(tags=["realtime"])
+router = APIRouter(tags=["Realtime"])
 
 
 def _event_data(event: RealtimeEvent) -> dict[str, Any]:

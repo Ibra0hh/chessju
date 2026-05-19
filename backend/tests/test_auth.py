@@ -155,7 +155,8 @@ def test_auth_me_rejects_expired_access_token() -> None:
     response = client.get("/api/v1/auth/me", headers=auth_headers(expired_token))
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid access token"
+    assert response.json()["error"]["code"] == "auth.unauthorized"
+    assert response.json()["error"]["message"] == "Invalid access token"
     assert payload["password"] not in response.text
 
 

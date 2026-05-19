@@ -24,7 +24,7 @@ from app.notifications.services import (
 )
 from app.users.models import User
 
-router = APIRouter(tags=["notifications"])
+router = APIRouter(tags=["Notifications"])
 
 
 @router.get("/notifications", response_model=NotificationListResponse)

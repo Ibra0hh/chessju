@@ -195,6 +195,20 @@ ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients 
 - Chess.com sync completed/failed notification integration
 - Broadcast realtime events for published news and announcements
 
+### Phase 14: Backend Hardening And API Polish
+
+- Standard API error response shape
+- Request ID middleware and `X-Request-ID` response headers
+- Environment-backed CORS configuration for future Flutter web/admin
+- Valkey-backed rate-limit foundation
+- Rate limits on login, register, PGN import, analysis request, Chess.com sync, and message send
+- `/health/valkey` readiness endpoint
+- OpenAPI tag organization
+- Shared pagination metadata helper for future response standardization
+- Flutter API integration guide
+- Manual smoke-test guide
+- Public/admin security review documentation
+
 ## Current Database State
 
 Current Alembic head:
@@ -274,6 +288,8 @@ Endpoint groups currently implemented:
 - Notification and notification preference endpoints
 - Authenticated SSE realtime stream endpoint
 - Admin notification and realtime event listing endpoints
+- Standard error responses with request IDs
+- Valkey health endpoint
 
 ## Current Worker And Queue State
 
@@ -289,7 +305,7 @@ Endpoint groups currently implemented:
 
 Latest known verification at this checkpoint:
 
-- pytest: `296 passed`
+- pytest: `306 passed`
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Docker stack status:
@@ -302,8 +318,8 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 12 commit before Phase 13: `d408764d99b8a0169063fcd56751602e6163169c`
-- Git status before Phase 13 implementation: clean
+- Latest completed Phase 13 commit before Phase 14: `6f75be6871c018aeb64d0fd200e0d066402bed56`
+- Git status before Phase 14 implementation: clean
 
 ## Important Permanent Rules
 
@@ -323,6 +339,10 @@ Latest known verification at this checkpoint:
 - Message deletion must be soft deletion.
 - In-app notification payloads must not contain secrets, raw PGN, or unnecessary message bodies.
 - SSE events are lightweight hints; REST endpoints remain authoritative.
+- API error responses must use the standard `{ "error": ... }` shape.
+- Every response should include `X-Request-ID`.
+- CORS origins must be explicit when credentials are enabled.
+- Rate limits should protect expensive and abuse-prone endpoints.
 - Do not commit secrets.
 - Do not commit `.env`.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.

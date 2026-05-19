@@ -41,4 +41,8 @@ def test_database_health_failure(monkeypatch) -> None:
     response = client.get("/health/db")
 
     assert response.status_code == 503
-    assert response.json()["detail"] == {"status": "unavailable", "database": "postgresql"}
+    assert response.json()["error"]["code"] == "service.unavailable"
+    assert response.json()["error"]["details"]["detail"] == {
+        "status": "unavailable",
+        "database": "postgresql",
+    }

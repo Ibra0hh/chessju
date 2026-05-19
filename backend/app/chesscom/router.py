@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user, require_admin
@@ -26,10 +26,12 @@ from app.chesscom.services import (
     list_user_sync_jobs,
     request_sync,
 )
+from app.common.rate_limit import enforce_user_rate_limit
+from app.config import get_settings
 from app.database import get_db_session
 from app.users.models import User
 
-router = APIRouter(tags=["chesscom"])
+router = APIRouter(tags=["Chess.com"])
 
 
 @router.post("/integrations/chesscom/connect", response_model=ChessComAccountResponse)
@@ -65,9 +67,18 @@ async def disconnect_chesscom_account(
 )
 async def sync_chesscom_games(
     payload: ChessComSyncRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> ChessComSyncJobResponse:
+    settings = get_settings()
+    await enforce_user_rate_limit(
+        request,
+        user=current_user,
+        scope="chesscom_sync",
+        limit=settings.rate_limit_chesscom_sync_per_hour,
+        window_seconds=3600,
+    )
     return await request_sync(session=session, user=current_user, months=payload.months)
 
 

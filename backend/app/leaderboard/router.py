@@ -24,7 +24,7 @@ from app.leaderboard.services import (
 )
 from app.users.models import User
 
-router = APIRouter(tags=["leaderboard"])
+router = APIRouter(tags=["Leaderboard"])
 
 
 def _client_ip(request: Request) -> str | None:

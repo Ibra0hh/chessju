@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user, require_admin
+from app.common.rate_limit import enforce_user_rate_limit
+from app.config import get_settings
 from app.database import get_db_session
 from app.social.schemas import (
     BlockCreateRequest,
@@ -49,7 +51,7 @@ from app.social.services import (
 )
 from app.users.models import User
 
-router = APIRouter(tags=["social"])
+router = APIRouter(tags=["Social/Chat"])
 
 
 def _client_ip(request: Request) -> str | None:
@@ -223,9 +225,18 @@ async def conversation_messages(
 async def create_message(
     conversation_id: uuid.UUID,
     payload: MessageCreateRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MessageResponse:
+    settings = get_settings()
+    await enforce_user_rate_limit(
+        request,
+        user=current_user,
+        scope="message",
+        limit=settings.rate_limit_message_per_minute,
+        window_seconds=60,
+    )
     return await send_message(
         session=session,
         user=current_user,

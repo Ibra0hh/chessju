@@ -39,7 +39,7 @@ from app.news.services import (
 )
 from app.users.models import User
 
-router = APIRouter(tags=["content"])
+router = APIRouter(tags=["News"])
 
 
 def _client_ip(request: Request) -> str | None:

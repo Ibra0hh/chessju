@@ -10,7 +10,7 @@ from app.database import get_db_session
 from app.users.models import User
 from app.users.services import get_role_names_for_user
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
 @router.get("/me", response_model=AdminIdentityResponse)

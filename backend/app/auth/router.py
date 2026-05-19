@@ -12,12 +12,14 @@ from app.auth.schemas import (
     TokenResponse,
 )
 from app.auth.services import login_user, refresh_tokens, register_user, revoke_refresh_token
+from app.common.rate_limit import enforce_ip_rate_limit
+from app.config import get_settings
 from app.database import get_db_session
 from app.users.models import User
 from app.users.schemas import CurrentUserResponse
 from app.users.services import get_current_user_response
 
-router = APIRouter(tags=["auth"])
+router = APIRouter(tags=["Auth"])
 
 
 def _client_ip(request: Request) -> str | None:
@@ -30,6 +32,13 @@ async def register(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> AuthResponse:
+    settings = get_settings()
+    await enforce_ip_rate_limit(
+        request,
+        scope="register",
+        limit=settings.rate_limit_register_per_hour,
+        window_seconds=3600,
+    )
     return await register_user(
         session=session,
         payload=payload,
@@ -44,6 +53,13 @@ async def login(
     request: Request,
     session: AsyncSession = Depends(get_db_session),
 ) -> AuthResponse:
+    settings = get_settings()
+    await enforce_ip_rate_limit(
+        request,
+        scope="login",
+        limit=settings.rate_limit_login_per_minute,
+        window_seconds=60,
+    )
     return await login_user(
         session=session,
         payload=payload,

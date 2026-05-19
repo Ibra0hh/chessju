@@ -1,9 +1,11 @@
 import uuid
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user, require_admin
+from app.common.rate_limit import enforce_user_rate_limit
+from app.config import get_settings
 from app.database import get_db_session
 from app.pgn.schemas import (
     GameDetailResponse,
@@ -24,7 +26,7 @@ from app.pgn.services import (
 )
 from app.users.models import User
 
-router = APIRouter(tags=["pgn"])
+router = APIRouter(tags=["Games/PGN"])
 
 
 @router.post(
@@ -34,9 +36,18 @@ router = APIRouter(tags=["pgn"])
 )
 async def paste_pgn_game(
     payload: PgnPasteRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> GameDetailResponse:
+    settings = get_settings()
+    await enforce_user_rate_limit(
+        request,
+        user=current_user,
+        scope="pgn",
+        limit=settings.rate_limit_pgn_per_hour,
+        window_seconds=3600,
+    )
     return await paste_pgn(session=session, user_id=current_user.id, pgn_text=payload.pgn_text)
 
 
@@ -46,10 +57,19 @@ async def paste_pgn_game(
     status_code=status.HTTP_201_CREATED,
 )
 async def upload_pgn_game(
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> GameDetailResponse:
+    settings = get_settings()
+    await enforce_user_rate_limit(
+        request,
+        user=current_user,
+        scope="pgn",
+        limit=settings.rate_limit_pgn_per_hour,
+        window_seconds=3600,
+    )
     return await upload_pgn(session=session, user_id=current_user.id, upload=file)
 
 

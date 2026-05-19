@@ -76,7 +76,7 @@ from app.tournaments.services import (
 from app.users.models import User
 from app.users.services import get_user_with_profile
 
-router = APIRouter(tags=["tournaments"])
+router = APIRouter(tags=["Tournaments"])
 
 
 def _client_ip(request: Request) -> str | None:
