@@ -278,6 +278,15 @@ ChessJU will have a basic original chess analysis board.
 
 It may be inspired by common chess analysis board concepts, but do not copy Chess.com branding, assets, exact layout, proprietary UI, or proprietary Game Review behavior.
 
+Chesskit may be used only as a conceptual reference for common chess-review ideas such as live
+engine evaluation, evaluation graphs, custom arrows, move classification, Stockfish-based game
+review, external game import, and local/browser game storage concepts.
+
+Do not copy Chesskit source code, UI layout, assets, names, branding, exact wording, or files.
+Do not import Chesskit files or adapt implementation details from its source. Chesskit is AGPL-3.0,
+so copying code or derivative implementation details could create licensing obligations ChessJU did
+not choose. ChessJU must remain an original implementation.
+
 Version 1 analysis board support is backend-first:
 
 - User can paste PGN
@@ -340,6 +349,10 @@ The basic Stockfish phase may include:
 
 Advanced review behavior, cloud-scale analysis, and exact Game Review clone behavior remain later
 work.
+
+For Flutter later, the backend response data should make it possible to display an evaluation bar,
+evaluation graph, best move, principal variation, move classification, and approximate accuracy
+summary, without requiring ChessJU to copy another app's UI or terminology.
 
 ## Flutter API Design Rules
 

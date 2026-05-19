@@ -115,6 +115,8 @@ Phase 9 analysis output is approximate:
 - Move classification is a simple ChessJU centipawn-loss model
 - Accuracy is an approximate internal estimate
 - The feature does not copy Chess.com Game Review branding, wording, assets, or proprietary behavior
+- Chesskit is allowed only as a conceptual reference; do not copy its AGPL-3.0 source code, UI,
+  assets, names, branding, exact wording, files, or implementation details into ChessJU
 
 Not implemented yet:
 

@@ -171,3 +171,10 @@ Analysis report responses include approximate accuracy, a summary count by side,
 and one row per move with evaluation before/after, best move, short principal variation, centipawn
 loss, and a simple ChessJU classification. They intentionally do not copy Chess.com Game Review
 branding, wording, or proprietary behavior.
+
+The response shape is also meant to support later Flutter UI elements such as an evaluation bar,
+evaluation graph, best-move display, principal variation, move coloring, and an accuracy summary.
+Those UI features are not implemented in Phase 9.
+
+Chesskit may be considered only as a conceptual reference for common chess-review ideas. Do not copy
+Chesskit code, UI layout, assets, names, branding, or exact wording into ChessJU.

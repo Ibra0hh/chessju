@@ -96,6 +96,9 @@ Stockfish analysis settings:
 The worker image installs Stockfish and consumes the Valkey/RQ `analysis` queue. Analysis jobs run
 outside API request handlers.
 
+Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
+AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
+
 ## Phase 1 Endpoints
 
 - `GET /health`
