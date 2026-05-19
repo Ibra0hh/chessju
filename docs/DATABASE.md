@@ -138,3 +138,22 @@ variation, centipawn loss, and ChessJU's basic move classification. Rows are uni
 
 Analysis jobs are created by the API and processed by the worker through Valkey/RQ. Stockfish output
 is stored in PostgreSQL; Valkey is only the transient queue transport.
+
+Phase 10 Chess.com import tables:
+
+- `chesscom_accounts`
+- `chesscom_sync_jobs`
+- `chesscom_imported_games`
+
+`chesscom_accounts` stores one connected Chess.com username per ChessJU user. It stores public
+profile metadata such as profile URL, title, country URL, avatar URL, joined time, and last-online
+time. It does not store credentials. Disconnecting marks the account with `disconnected_at` so
+already imported games can keep their integration metadata.
+
+`chesscom_sync_jobs` stores queued, running, completed, failed, and cancelled public game sync
+requests. Jobs track requested archive months, games found, games imported, games skipped, safe
+error messages, and start/completion timestamps.
+
+`chesscom_imported_games` links a Chess.com public game URL to the ChessJU `games` row created from
+its PGN. URLs are unique to avoid duplicate imports. Imported games use `games.source =
+'chesscom_import'`, reuse `game_moves`, and create `pgn_imports.source = 'chesscom'`.

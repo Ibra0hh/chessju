@@ -178,3 +178,26 @@ Those UI features are not implemented in Phase 9.
 
 Chesskit may be considered only as a conceptual reference for common chess-review ideas. Do not copy
 Chesskit code, UI layout, assets, names, branding, or exact wording into ChessJU.
+
+Phase 10 Chess.com public import endpoints:
+
+- `POST /api/v1/integrations/chesscom/connect`
+- `GET /api/v1/integrations/chesscom/account`
+- `DELETE /api/v1/integrations/chesscom/account`
+- `POST /api/v1/integrations/chesscom/sync`
+- `GET /api/v1/integrations/chesscom/sync-jobs`
+- `GET /api/v1/integrations/chesscom/sync-jobs/{job_id}`
+- `GET /api/v1/integrations/chesscom/imported-games`
+- `GET /api/v1/admin/chesscom/accounts`
+- `GET /api/v1/admin/chesscom/sync-jobs`
+- `GET /api/v1/admin/chesscom/imported-games`
+
+Users connect one Chess.com username using public profile data only. ChessJU never asks for or
+stores Chess.com passwords. Sync requests create `chesscom_sync_jobs` rows and enqueue background
+worker work through Valkey/RQ. The worker fetches public monthly archives serially, imports valid
+PGNs into the shared `games` and `game_moves` tables, creates `pgn_imports` with source
+`chesscom`, and records import metadata in `chesscom_imported_games`.
+
+Imported Chess.com games appear in `GET /api/v1/games?source=chesscom_import` and can use the
+existing analysis endpoints. Sync tests mock Chess.com responses; the test suite does not depend on
+live network access.

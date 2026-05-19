@@ -96,6 +96,16 @@ Stockfish analysis settings:
 The worker image installs Stockfish and consumes the Valkey/RQ `analysis` queue. Analysis jobs run
 outside API request handlers.
 
+Chess.com public import settings:
+
+- `CHESSJU_CHESSCOM_SYNC_MAX_MONTHS`
+- `CHESSJU_CHESSCOM_SYNC_TIMEOUT_SECONDS`
+- `CHESSJU_CHESSCOM_USER_AGENT`
+
+Chess.com sync uses only public read-only data. ChessJU never asks for Chess.com passwords and does
+not scrape pages. Sync jobs run in the worker and imported PGNs reuse the existing game library,
+normalized move storage, and analysis endpoints.
+
 Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
 AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
 
@@ -118,8 +128,9 @@ announcements, home content, time controls, tournaments, tournament registration
 manual rounds, manual pairings, result entry, linked tournament game records, basic tournament
 standings, the global JU leaderboard, PGN paste/upload, normalized game moves, authenticated game
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
-Stockfish analysis jobs through the worker. Chess.com sync, chat, frontend code, automatic pairing,
-advanced tie-breaks, and advanced game review behavior are intentionally delayed.
+Stockfish analysis jobs through the worker, and Chess.com public game import. Chat, frontend code,
+automatic pairing, advanced tie-breaks, Lichess import, scheduled sync, and advanced game review
+behavior are intentionally delayed.
 
 ## Notes
 

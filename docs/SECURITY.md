@@ -123,3 +123,25 @@ Not implemented yet:
 - Chess.com sync
 - cloud-scale engine execution
 - exact Game Review clone behavior
+
+Phase 10 Chess.com import security rules:
+
+- ChessJU uses only Chess.com's public, read-only Published Data API
+- Users are never asked for Chess.com passwords
+- ChessJU does not store Chess.com credentials, tokens, or private API secrets
+- The integration does not scrape Chess.com pages
+- Username connection stores public profile metadata only
+- Sync jobs run in the worker, not inside normal API request handlers
+- Sync fetches are capped by `CHESSJU_CHESSCOM_SYNC_MAX_MONTHS`
+- Requests use timeouts and a recognizable `CHESSJU_CHESSCOM_USER_AGENT`
+- Tests mock Chess.com HTTP responses and do not depend on live public API access
+- Users can manage only their own Chess.com account, sync jobs, and imported games
+- Admin and super admin users can list integration records for support/operations
+- Imported PGN content is parsed through the existing PGN pipeline and is not written to audit logs
+
+Not implemented yet:
+
+- Lichess import
+- automatic scheduled Chess.com sync
+- auto-analysis after import
+- frontend integration UI

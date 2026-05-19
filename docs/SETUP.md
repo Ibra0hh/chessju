@@ -28,6 +28,14 @@ Stockfish analysis:
 - Analysis jobs are queued through Valkey/RQ and processed by the worker service.
 - Do not run Stockfish directly inside API request handlers.
 
+Chess.com public import:
+
+- `CHESSJU_CHESSCOM_SYNC_MAX_MONTHS` caps archive months per sync request.
+- `CHESSJU_CHESSCOM_SYNC_TIMEOUT_SECONDS` controls public API request timeout and job timeout.
+- `CHESSJU_CHESSCOM_USER_AGENT` should be recognizable contact text before any public deployment.
+- The worker consumes both the `analysis` and `chesscom` RQ queues.
+- Tests mock Chess.com responses; they should not rely on live network access.
+
 Start local services:
 
 ```powershell

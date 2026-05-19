@@ -201,20 +201,21 @@ async def build_game_detail(session: AsyncSession, game: Game) -> GameDetailResp
     )
 
 
-async def _create_game_from_parsed_pgn(
+async def create_game_from_parsed_pgn(
     session: AsyncSession,
     user_id: uuid.UUID,
     pgn_text: str,
     parsed: ParsedPgnGame,
     import_source: str,
+    game_source: str = "pgn_upload",
     file_record: FileRecord | None = None,
-) -> GameDetailResponse:
+) -> Game:
     game = Game(
         owner_id=user_id,
         white_name=parsed.metadata.get("White"),
         black_name=parsed.metadata.get("Black"),
         result=parsed.metadata.get("Result"),
-        source="pgn_upload",
+        source=game_source,
         pgn_text=pgn_text,
         pgn_file_id=file_record.id if file_record else None,
         played_at=parsed.played_at,
@@ -253,6 +254,27 @@ async def _create_game_from_parsed_pgn(
         completed_at=datetime.now(UTC),
     )
     session.add(pgn_import)
+    await session.flush()
+    return game
+
+
+async def _create_game_from_parsed_pgn(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    pgn_text: str,
+    parsed: ParsedPgnGame,
+    import_source: str,
+    file_record: FileRecord | None = None,
+) -> GameDetailResponse:
+    game = await create_game_from_parsed_pgn(
+        session=session,
+        user_id=user_id,
+        pgn_text=pgn_text,
+        parsed=parsed,
+        import_source=import_source,
+        game_source="pgn_upload",
+        file_record=file_record,
+    )
     await session.commit()
     await session.refresh(game)
     return await build_game_detail(session, game)

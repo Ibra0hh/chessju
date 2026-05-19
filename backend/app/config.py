@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     stockfish_depth_max: int = 16
     analysis_max_plies: int = 300
     analysis_job_timeout_seconds: int = 120
+    chesscom_sync_max_months: int = 3
+    chesscom_sync_timeout_seconds: int = 120
+    chesscom_user_agent: str = "ChessJU/0.1 contact: local-development"
 
     model_config = SettingsConfigDict(
         env_file=".env",

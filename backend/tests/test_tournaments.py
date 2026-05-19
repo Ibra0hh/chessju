@@ -192,6 +192,22 @@ def latest_audit_log(action: str, entity_id: str, admin_data: dict) -> dict:
     raise AssertionError(f"Audit log not found for {action} {entity_id}")
 
 
+def paged_public_tournament_slugs(query: str = "") -> set[str]:
+    slugs: set[str] = set()
+    offset = 0
+    base_path = f"/api/v1/tournaments{query}"
+    while True:
+        separator = "&" if "?" in base_path else "?"
+        response = client.get(f"{base_path}{separator}limit=100&offset={offset}")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        slugs.update(item["slug"] for item in body["items"])
+        offset += len(body["items"])
+        if offset >= body["total"] or not body["items"]:
+            break
+    return slugs
+
+
 async def set_tournament_status_direct(tournament_id: str, status: str) -> None:
     async with AsyncSessionLocal() as session:
         tournament = await session.get(Tournament, uuid.UUID(tournament_id))
@@ -356,10 +372,7 @@ def test_public_list_does_not_show_draft_tournaments() -> None:
     admin_data = register_admin()
     tournament = create_tournament(admin_data, slug=f"draft-{unique_suffix()}")
 
-    response = client.get("/api/v1/tournaments?limit=100")
-
-    assert response.status_code == 200
-    slugs = {item["slug"] for item in response.json()["items"]}
+    slugs = paged_public_tournament_slugs()
     assert tournament["slug"] not in slugs
 
 
@@ -371,10 +384,7 @@ def test_public_list_shows_registration_open_tournament() -> None:
         starts_in_minutes=5,
     )
 
-    response = client.get("/api/v1/tournaments?status=registration_open&limit=100")
-
-    assert response.status_code == 200
-    slugs = {item["slug"] for item in response.json()["items"]}
+    slugs = paged_public_tournament_slugs("?status=registration_open")
     assert tournament["slug"] in slugs
 
 

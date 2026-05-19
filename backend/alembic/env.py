@@ -10,6 +10,7 @@ from alembic import context
 from app.admin import models as admin_models  # noqa: F401
 from app.analysis import models as analysis_models  # noqa: F401
 from app.auth import models as auth_models  # noqa: F401
+from app.chesscom import models as chesscom_models  # noqa: F401
 from app.config import get_settings
 from app.database import Base
 from app.files import models as files_models  # noqa: F401

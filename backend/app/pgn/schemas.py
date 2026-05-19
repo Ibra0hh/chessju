@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 GameSource = Literal["tournament", "pgn_upload", "chesscom_import", "manual"]
-PgnImportSource = Literal["paste", "file_upload"]
+PgnImportSource = Literal["paste", "file_upload", "chesscom"]
 PgnImportStatus = Literal["pending", "parsed", "failed"]
 
 

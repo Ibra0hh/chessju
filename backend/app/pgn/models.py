@@ -12,7 +12,10 @@ from app.database import Base
 class PgnImport(Base):
     __tablename__ = "pgn_imports"
     __table_args__ = (
-        CheckConstraint("source in ('paste', 'file_upload')", name="ck_pgn_imports_source_valid"),
+        CheckConstraint(
+            "source in ('paste', 'file_upload', 'chesscom')",
+            name="ck_pgn_imports_source_valid",
+        ),
         CheckConstraint(
             "status in ('pending', 'parsed', 'failed')",
             name="ck_pgn_imports_status_valid",

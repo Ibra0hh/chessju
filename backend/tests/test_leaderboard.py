@@ -241,6 +241,21 @@ def latest_audit_log(action: str, entity_id: str | None, admin_data: dict) -> di
     raise AssertionError(f"Audit log not found for {action} {entity_id}")
 
 
+def paged_ids(path: str, headers: dict[str, str] | None = None) -> set[str]:
+    ids: set[str] = set()
+    offset = 0
+    while True:
+        separator = "&" if "?" in path else "?"
+        response = client.get(f"{path}{separator}limit=100&offset={offset}", headers=headers)
+        assert response.status_code == 200, response.text
+        body = response.json()
+        ids.update(item["id"] for item in body["items"])
+        offset += len(body["items"])
+        if offset >= body["total"] or not body["items"]:
+            break
+    return ids
+
+
 def test_admin_can_create_season() -> None:
     admin_data = register_admin()
     season = create_season(admin_data)
@@ -275,16 +290,21 @@ def test_admin_can_activate_season_and_deactivates_others() -> None:
         f"/api/v1/admin/leaderboard/seasons/{second['id']}/activate",
         headers=auth_headers(admin_data["tokens"]["access_token"]),
     )
-    seasons = client.get(
-        "/api/v1/admin/leaderboard/seasons?limit=100",
+    season_ids = paged_ids(
+        "/api/v1/admin/leaderboard/seasons",
         headers=auth_headers(admin_data["tokens"]["access_token"]),
     )
 
     assert response.status_code == 200
     assert response.json()["active"] is True
-    season_map = {item["id"]: item for item in seasons.json()["items"]}
-    assert season_map[first["id"]]["active"] is False
-    assert season_map[second["id"]]["active"] is True
+    assert first["id"] in season_ids
+    assert second["id"] in season_ids
+    assert client.get(
+        f"/api/v1/leaderboard/seasons/{first['id']}",
+    ).json()["season"]["active"] is False
+    assert client.get(
+        f"/api/v1/leaderboard/seasons/{second['id']}",
+    ).json()["season"]["active"] is True
 
 
 def test_invalid_season_date_range_is_rejected() -> None:
@@ -560,10 +580,7 @@ def test_public_leaderboard_seasons_returns_seasons() -> None:
     admin_data = register_admin()
     season = create_season(admin_data)
 
-    response = client.get("/api/v1/leaderboard/seasons?limit=100")
-
-    assert response.status_code == 200
-    ids = {item["id"] for item in response.json()["items"]}
+    ids = paged_ids("/api/v1/leaderboard/seasons")
     assert season["id"] in ids
 
 
