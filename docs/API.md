@@ -29,3 +29,28 @@ Phase 3 admin endpoints:
 
 Admin endpoints require an `admin` or `super_admin` role. Audit logs support `limit`, `offset`,
 `action`, `entity_type`, and `admin_id` query parameters and are sorted newest first.
+
+Phase 4 content endpoints:
+
+- `GET /api/v1/home`
+- `GET /api/v1/news`
+- `GET /api/v1/news/{slug}`
+- `GET /api/v1/announcements`
+- `POST /api/v1/admin/files`
+- `POST /api/v1/admin/news`
+- `GET /api/v1/admin/news`
+- `GET /api/v1/admin/news/{article_id}`
+- `PATCH /api/v1/admin/news/{article_id}`
+- `POST /api/v1/admin/news/{article_id}/publish`
+- `POST /api/v1/admin/news/{article_id}/archive`
+- `DELETE /api/v1/admin/news/{article_id}`
+- `POST /api/v1/admin/announcements`
+- `GET /api/v1/admin/announcements`
+- `PATCH /api/v1/admin/announcements/{announcement_id}`
+- `POST /api/v1/admin/announcements/{announcement_id}/publish`
+- `POST /api/v1/admin/announcements/{announcement_id}/archive`
+- `DELETE /api/v1/admin/announcements/{announcement_id}`
+
+Public news and announcements return only published, non-deleted content. The home endpoint returns
+stable Flutter-ready keys: `announcements`, `latest_news`, `upcoming_tournaments`, and
+`leaderboard_preview`.

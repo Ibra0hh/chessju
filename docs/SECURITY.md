@@ -21,3 +21,13 @@ Phase 3 admin audit rules:
 - Audit logs must never store passwords, password hashes, refresh tokens, token hashes, JWTs, API
   keys, authorization headers, or secrets
 - Audit payloads are sanitized before storage
+
+Phase 4 file and content rules:
+
+- Admin file upload requires `admin` or `super_admin`
+- Uploaded files are stored on the local filesystem and metadata is stored in PostgreSQL
+- Client filenames are not trusted for storage names
+- Uploads are checked by declared content type and extension
+- Executable extensions are rejected
+- File metadata responses do not expose internal absolute filesystem paths
+- Article and announcement admin mutations create audit log entries with sanitized before/after data

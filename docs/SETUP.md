@@ -15,6 +15,12 @@ Copy environment settings:
 Copy-Item .env.example .env
 ```
 
+Local storage:
+
+- `CHESSJU_LOCAL_STORAGE_ROOT` controls where uploaded files are stored.
+- Docker development uses `/data/storage`, backed by the `chessju_storage` volume.
+- Do not commit local uploaded files or `.env`.
+
 Start local services:
 
 ```powershell

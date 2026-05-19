@@ -40,6 +40,12 @@ API:
 http://localhost:8001
 ```
 
+Home API:
+
+```text
+http://localhost:8001/api/v1/home
+```
+
 OpenAPI:
 
 ```text
@@ -75,6 +81,9 @@ Apply migrations:
 cd backend
 alembic upgrade head
 ```
+
+Local uploads are controlled by `CHESSJU_LOCAL_STORAGE_ROOT`. In Docker development this points to
+`/data/storage` inside the API container and is backed by a Docker volume.
 
 ## Phase 1 Endpoints
 
