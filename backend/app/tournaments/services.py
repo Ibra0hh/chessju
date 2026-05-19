@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import HTTPException, status
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -12,11 +12,26 @@ from sqlalchemy.orm import selectinload
 from app.admin.services import create_admin_action_log
 from app.common.time import utc_now
 from app.files.models import FileRecord
-from app.tournaments.models import TimeControl, Tournament, TournamentRegistration
+from app.games.models import Game
+from app.tournaments.models import Pairing, Round, TimeControl, Tournament, TournamentRegistration
 from app.tournaments.schemas import (
     AdminTournamentListResponse,
     AdminTournamentResponse,
     DeleteTournamentResponse,
+    PairingBulkCreateRequest,
+    PairingCreateRequest,
+    PairingListResponse,
+    PairingResponse,
+    PairingUpdateRequest,
+    PlayerSummaryResponse,
+    ResultSubmitRequest,
+    RoundCreateRequest,
+    RoundDetailResponse,
+    RoundListResponse,
+    RoundResponse,
+    RoundUpdateRequest,
+    StandingRowResponse,
+    StandingsResponse,
     TimeControlCreateRequest,
     TimeControlListResponse,
     TimeControlResponse,
@@ -29,9 +44,11 @@ from app.tournaments.schemas import (
     TournamentRegistrationUpdateRequest,
     TournamentSummaryResponse,
     TournamentUpdateRequest,
+    UserPairingListResponse,
     UserTournamentRegistrationListResponse,
     UserTournamentRegistrationResponse,
 )
+from app.users.models import Profile
 
 SLUG_NON_ALNUM = re.compile(r"[^a-z0-9]+")
 VISIBLE_TOURNAMENT_STATUSES = {
@@ -50,6 +67,16 @@ HOME_TOURNAMENT_STATUSES = {
     "check_in",
 }
 REGISTERABLE_STATUS = "registration_open"
+VISIBLE_ROUND_STATUSES = {"published", "in_progress", "completed", "cancelled"}
+SCORING_RESULTS = {
+    "white_win",
+    "black_win",
+    "draw",
+    "white_forfeit",
+    "black_forfeit",
+    "double_forfeit",
+    "bye",
+}
 
 
 def normalize_slug(value: str) -> str:
@@ -869,3 +896,836 @@ async def update_registration_status(
     await session.commit()
     await session.refresh(registration)
     return TournamentRegistrationResponse.model_validate(registration)
+
+
+async def _profile_for_user(session: AsyncSession, user_id: uuid.UUID) -> Profile | None:
+    result = await session.execute(select(Profile).where(Profile.user_id == user_id))
+    return result.scalar_one_or_none()
+
+
+async def _player_summary(
+    session: AsyncSession, user_id: uuid.UUID | None
+) -> PlayerSummaryResponse | None:
+    if user_id is None:
+        return None
+    profile = await _profile_for_user(session, user_id)
+    if profile is None:
+        return None
+    return PlayerSummaryResponse(
+        id=user_id,
+        username=profile.username,
+        full_name=profile.full_name,
+    )
+
+
+async def build_pairing_response(session: AsyncSession, pairing: Pairing) -> PairingResponse:
+    return PairingResponse(
+        id=pairing.id,
+        round_id=pairing.round_id,
+        tournament_id=pairing.tournament_id,
+        board_number=pairing.board_number,
+        white_user=await _player_summary(session, pairing.white_user_id),
+        black_user=await _player_summary(session, pairing.black_user_id),
+        status=pairing.status,
+        result=pairing.result,
+        result_reported_at=pairing.result_reported_at,
+        created_at=pairing.created_at,
+        updated_at=pairing.updated_at,
+    )
+
+
+async def get_visible_tournament_model_by_slug(session: AsyncSession, slug: str) -> Tournament:
+    result = await session.execute(_visible_tournaments_statement().where(Tournament.slug == slug))
+    tournament = result.scalar_one_or_none()
+    if tournament is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tournament not found")
+    return tournament
+
+
+def round_audit_snapshot(round_record: Round) -> dict[str, Any]:
+    return {
+        "id": str(round_record.id),
+        "tournament_id": str(round_record.tournament_id),
+        "round_number": round_record.round_number,
+        "title": round_record.title,
+        "status": round_record.status,
+        "starts_at": _dt(round_record.starts_at),
+        "created_at": _dt(round_record.created_at),
+        "updated_at": _dt(round_record.updated_at),
+    }
+
+
+def pairing_audit_snapshot(pairing: Pairing) -> dict[str, Any]:
+    return {
+        "id": str(pairing.id),
+        "round_id": str(pairing.round_id),
+        "tournament_id": str(pairing.tournament_id),
+        "board_number": pairing.board_number,
+        "white_user_id": str(pairing.white_user_id) if pairing.white_user_id else None,
+        "black_user_id": str(pairing.black_user_id) if pairing.black_user_id else None,
+        "status": pairing.status,
+        "result": pairing.result,
+        "result_reported_by": (
+            str(pairing.result_reported_by) if pairing.result_reported_by else None
+        ),
+        "result_reported_at": _dt(pairing.result_reported_at),
+        "created_at": _dt(pairing.created_at),
+        "updated_at": _dt(pairing.updated_at),
+    }
+
+
+async def _next_round_number(session: AsyncSession, tournament_id: uuid.UUID) -> int:
+    current = await session.scalar(
+        select(func.max(Round.round_number)).where(Round.tournament_id == tournament_id)
+    )
+    return (current or 0) + 1
+
+
+async def _next_board_number(session: AsyncSession, round_id: uuid.UUID) -> int:
+    current = await session.scalar(
+        select(func.max(Pairing.board_number)).where(Pairing.round_id == round_id)
+    )
+    return (current or 0) + 1
+
+
+async def create_round(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    tournament_id: uuid.UUID,
+    payload: RoundCreateRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> RoundResponse:
+    tournament = await get_admin_tournament(session, tournament_id)
+    if tournament.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tournament is deleted")
+    round_number = payload.round_number or await _next_round_number(session, tournament_id)
+    round_record = Round(
+        tournament_id=tournament_id,
+        round_number=round_number,
+        title=payload.title,
+        status="draft",
+        starts_at=payload.starts_at,
+    )
+    session.add(round_record)
+    try:
+        await session.flush()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Round number already exists for this tournament",
+        ) from exc
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action="round.created",
+        entity_type="round",
+        entity_id=round_record.id,
+        after=round_audit_snapshot(round_record),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    await session.commit()
+    await session.refresh(round_record)
+    return RoundResponse.model_validate(round_record)
+
+
+async def list_admin_rounds(
+    session: AsyncSession, tournament_id: uuid.UUID, limit: int = 50, offset: int = 0
+) -> RoundListResponse:
+    await get_admin_tournament(session, tournament_id)
+    statement = select(Round).where(Round.tournament_id == tournament_id)
+    total = await session.scalar(select(func.count()).select_from(statement.subquery()))
+    result = await session.execute(
+        statement.order_by(Round.round_number.asc()).limit(limit).offset(offset)
+    )
+    return RoundListResponse(
+        items=[RoundResponse.model_validate(item) for item in result.scalars()],
+        limit=limit,
+        offset=offset,
+        total=total or 0,
+    )
+
+
+async def list_public_rounds_by_slug(
+    session: AsyncSession, slug: str, limit: int = 50, offset: int = 0
+) -> RoundListResponse:
+    tournament = await get_visible_tournament_model_by_slug(session, slug)
+    statement = select(Round).where(
+        Round.tournament_id == tournament.id,
+        Round.status.in_(VISIBLE_ROUND_STATUSES),
+    )
+    total = await session.scalar(select(func.count()).select_from(statement.subquery()))
+    result = await session.execute(
+        statement.order_by(Round.round_number.asc()).limit(limit).offset(offset)
+    )
+    return RoundListResponse(
+        items=[RoundResponse.model_validate(item) for item in result.scalars()],
+        limit=limit,
+        offset=offset,
+        total=total or 0,
+    )
+
+
+async def get_admin_round(session: AsyncSession, round_id: uuid.UUID) -> Round:
+    round_record = await session.get(Round, round_id)
+    if round_record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Round not found")
+    return round_record
+
+
+async def update_round(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    round_id: uuid.UUID,
+    payload: RoundUpdateRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> RoundResponse:
+    round_record = await get_admin_round(session, round_id)
+    before = round_audit_snapshot(round_record)
+    for field_name, value in payload.model_dump(exclude_unset=True).items():
+        setattr(round_record, field_name, value)
+    await session.flush()
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action="round.updated",
+        entity_type="round",
+        entity_id=round_record.id,
+        before=before,
+        after=round_audit_snapshot(round_record),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    await session.commit()
+    await session.refresh(round_record)
+    return RoundResponse.model_validate(round_record)
+
+
+async def set_round_status(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    round_id: uuid.UUID,
+    next_status: str,
+    action: str,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> RoundResponse:
+    round_record = await get_admin_round(session, round_id)
+    before = round_audit_snapshot(round_record)
+    round_record.status = next_status
+    await session.flush()
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action=action,
+        entity_type="round",
+        entity_id=round_record.id,
+        before=before,
+        after=round_audit_snapshot(round_record),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    await session.commit()
+    await session.refresh(round_record)
+    return RoundResponse.model_validate(round_record)
+
+
+async def _round_detail(session: AsyncSession, round_record: Round) -> RoundDetailResponse:
+    result = await session.execute(
+        select(Pairing)
+        .where(Pairing.round_id == round_record.id)
+        .order_by(Pairing.board_number.asc())
+    )
+    pairings = [await build_pairing_response(session, pairing) for pairing in result.scalars()]
+    return RoundDetailResponse(
+        **RoundResponse.model_validate(round_record).model_dump(),
+        pairings=pairings,
+    )
+
+
+async def get_admin_round_detail(session: AsyncSession, round_id: uuid.UUID) -> RoundDetailResponse:
+    return await _round_detail(session, await get_admin_round(session, round_id))
+
+
+async def get_public_round_detail(
+    session: AsyncSession, slug: str, round_number: int
+) -> RoundDetailResponse:
+    tournament = await get_visible_tournament_model_by_slug(session, slug)
+    result = await session.execute(
+        select(Round).where(
+            Round.tournament_id == tournament.id,
+            Round.round_number == round_number,
+            Round.status.in_(VISIBLE_ROUND_STATUSES),
+        )
+    )
+    round_record = result.scalar_one_or_none()
+    if round_record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Round not found")
+    return await _round_detail(session, round_record)
+
+
+async def _approved_registrant_ids(
+    session: AsyncSession, tournament_id: uuid.UUID
+) -> set[uuid.UUID]:
+    result = await session.execute(
+        select(TournamentRegistration.user_id).where(
+            TournamentRegistration.tournament_id == tournament_id,
+            TournamentRegistration.status == "approved",
+        )
+    )
+    return set(result.scalars().all())
+
+
+async def _players_already_paired(
+    session: AsyncSession, round_id: uuid.UUID, exclude_pairing_id: uuid.UUID | None = None
+) -> set[uuid.UUID]:
+    statement = select(Pairing.white_user_id, Pairing.black_user_id).where(
+        Pairing.round_id == round_id,
+        Pairing.status != "cancelled",
+    )
+    if exclude_pairing_id is not None:
+        statement = statement.where(Pairing.id != exclude_pairing_id)
+    result = await session.execute(statement)
+    players: set[uuid.UUID] = set()
+    for white_user_id, black_user_id in result.all():
+        if white_user_id:
+            players.add(white_user_id)
+        if black_user_id:
+            players.add(black_user_id)
+    return players
+
+
+def _request_player_ids(payload: PairingCreateRequest | PairingUpdateRequest) -> list[uuid.UUID]:
+    return [user_id for user_id in (payload.white_user_id, payload.black_user_id) if user_id]
+
+
+def _is_bye_pairing(white_user_id: uuid.UUID | None, black_user_id: uuid.UUID | None) -> bool:
+    return (white_user_id is None) != (black_user_id is None)
+
+
+def _validate_pairing_shape(
+    white_user_id: uuid.UUID | None,
+    black_user_id: uuid.UUID | None,
+    result: str = "pending",
+) -> None:
+    if white_user_id is not None and white_user_id == black_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="white_user_id and black_user_id cannot be the same",
+        )
+    is_bye = _is_bye_pairing(white_user_id, black_user_id)
+    if is_bye:
+        if result not in {"pending", "bye"}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Bye pairings can only use pending or bye result",
+            )
+        return
+    if white_user_id is None or black_user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Normal pairings require white_user_id and black_user_id",
+        )
+    if result == "bye":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bye result requires exactly one player",
+        )
+
+
+async def _validate_pairing_players(
+    session: AsyncSession,
+    tournament_id: uuid.UUID,
+    round_id: uuid.UUID,
+    player_ids: list[uuid.UUID],
+    exclude_pairing_id: uuid.UUID | None = None,
+) -> None:
+    approved_ids = await _approved_registrant_ids(session, tournament_id)
+    missing = set(player_ids) - approved_ids
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pairing players must be approved tournament registrants",
+        )
+    already_paired = await _players_already_paired(session, round_id, exclude_pairing_id)
+    conflicts = set(player_ids) & already_paired
+    if conflicts:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Player is already paired in this round",
+        )
+
+
+def _ensure_pairing_allowed_for_tournament(tournament: Tournament) -> None:
+    if tournament.deleted_at is not None or tournament.status in {"cancelled", "completed"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot create pairings for this tournament",
+        )
+
+
+async def create_pairing(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    round_id: uuid.UUID,
+    payload: PairingCreateRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+    audit_action: str = "pairing.created",
+    commit: bool = True,
+) -> PairingResponse:
+    round_record = await get_admin_round(session, round_id)
+    tournament = await get_admin_tournament(session, round_record.tournament_id)
+    _ensure_pairing_allowed_for_tournament(tournament)
+    board_number = payload.board_number or await _next_board_number(session, round_id)
+    _validate_pairing_shape(payload.white_user_id, payload.black_user_id, payload.result)
+    await _validate_pairing_players(
+        session,
+        tournament_id=round_record.tournament_id,
+        round_id=round_id,
+        player_ids=_request_player_ids(payload),
+    )
+    pairing = Pairing(
+        round_id=round_id,
+        tournament_id=round_record.tournament_id,
+        board_number=board_number,
+        white_user_id=payload.white_user_id,
+        black_user_id=payload.black_user_id,
+        result=payload.result,
+        status="completed" if payload.result == "bye" else "scheduled",
+        result_reported_by=admin_id if payload.result == "bye" else None,
+        result_reported_at=utc_now() if payload.result == "bye" else None,
+    )
+    session.add(pairing)
+    try:
+        await session.flush()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Board number already exists for this round",
+        ) from exc
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action=audit_action,
+        entity_type="pairing",
+        entity_id=pairing.id,
+        after=pairing_audit_snapshot(pairing),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    if payload.result == "bye":
+        await _upsert_game_for_pairing(session, pairing)
+    if commit:
+        await session.commit()
+        await session.refresh(pairing)
+    return await build_pairing_response(session, pairing)
+
+
+async def bulk_create_pairings(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    round_id: uuid.UUID,
+    payload: PairingBulkCreateRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> PairingListResponse:
+    board_numbers = [item.board_number for item in payload.pairings if item.board_number]
+    if len(board_numbers) != len(set(board_numbers)):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Duplicate board numbers in bulk pairing request",
+        )
+    players: list[uuid.UUID] = []
+    for item in payload.pairings:
+        _validate_pairing_shape(item.white_user_id, item.black_user_id, item.result)
+        players.extend(_request_player_ids(item))
+    if len(players) != len(set(players)):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Duplicate players in bulk pairing request",
+        )
+
+    responses: list[PairingResponse] = []
+    try:
+        for item in payload.pairings:
+            response = await create_pairing(
+                session=session,
+                admin_id=admin_id,
+                round_id=round_id,
+                payload=item,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                audit_action="pairings.bulk_created",
+                commit=False,
+            )
+            responses.append(response)
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    return PairingListResponse(
+        items=responses,
+        limit=len(responses),
+        offset=0,
+        total=len(responses),
+    )
+
+
+async def list_pairings_for_round(
+    session: AsyncSession, round_id: uuid.UUID, limit: int = 50, offset: int = 0
+) -> PairingListResponse:
+    await get_admin_round(session, round_id)
+    statement = select(Pairing).where(Pairing.round_id == round_id)
+    total = await session.scalar(select(func.count()).select_from(statement.subquery()))
+    result = await session.execute(
+        statement.order_by(Pairing.board_number.asc()).limit(limit).offset(offset)
+    )
+    pairings = result.scalars().all()
+    return PairingListResponse(
+        items=[await build_pairing_response(session, pairing) for pairing in pairings],
+        limit=limit,
+        offset=offset,
+        total=total or 0,
+    )
+
+
+async def list_public_pairings_by_slug(
+    session: AsyncSession,
+    slug: str,
+    limit: int = 100,
+    offset: int = 0,
+    round_number: int | None = None,
+) -> PairingListResponse:
+    tournament = await get_visible_tournament_model_by_slug(session, slug)
+    statement = select(Pairing).join(Round, Pairing.round_id == Round.id).where(
+        Pairing.tournament_id == tournament.id,
+        Round.status.in_(VISIBLE_ROUND_STATUSES),
+    )
+    if round_number is not None:
+        statement = statement.where(Round.round_number == round_number)
+    total = await session.scalar(select(func.count()).select_from(statement.subquery()))
+    result = await session.execute(
+        statement.order_by(Round.round_number.asc(), Pairing.board_number.asc())
+        .limit(limit)
+        .offset(offset)
+    )
+    pairings = result.scalars().all()
+    return PairingListResponse(
+        items=[await build_pairing_response(session, pairing) for pairing in pairings],
+        limit=limit,
+        offset=offset,
+        total=total or 0,
+    )
+
+
+async def update_pairing(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    pairing_id: uuid.UUID,
+    payload: PairingUpdateRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> PairingResponse:
+    pairing = await session.get(Pairing, pairing_id)
+    if pairing is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pairing not found")
+    if pairing.result != "pending":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot update players or board after a result is submitted",
+        )
+    before = pairing_audit_snapshot(pairing)
+    update_data = payload.model_dump(exclude_unset=True)
+    next_white = update_data.get("white_user_id", pairing.white_user_id)
+    next_black = update_data.get("black_user_id", pairing.black_user_id)
+    _validate_pairing_shape(next_white, next_black, pairing.result)
+    await _validate_pairing_players(
+        session,
+        tournament_id=pairing.tournament_id,
+        round_id=pairing.round_id,
+        player_ids=[user_id for user_id in (next_white, next_black) if user_id],
+        exclude_pairing_id=pairing.id,
+    )
+    for field_name, value in update_data.items():
+        setattr(pairing, field_name, value)
+    try:
+        await session.flush()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Board number already exists for this round",
+        ) from exc
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action="pairing.updated",
+        entity_type="pairing",
+        entity_id=pairing.id,
+        before=before,
+        after=pairing_audit_snapshot(pairing),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    await session.commit()
+    await session.refresh(pairing)
+    return await build_pairing_response(session, pairing)
+
+
+async def cancel_pairing(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    pairing_id: uuid.UUID,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> PairingResponse:
+    pairing = await session.get(Pairing, pairing_id)
+    if pairing is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pairing not found")
+    before = pairing_audit_snapshot(pairing)
+    pairing.status = "cancelled"
+    await session.flush()
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action="pairing.cancelled",
+        entity_type="pairing",
+        entity_id=pairing.id,
+        before=before,
+        after=pairing_audit_snapshot(pairing),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    await session.commit()
+    await session.refresh(pairing)
+    return await build_pairing_response(session, pairing)
+
+
+def _validate_result_for_pairing(pairing: Pairing, result: str) -> None:
+    is_bye = _is_bye_pairing(pairing.white_user_id, pairing.black_user_id)
+    if pairing.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot submit result for cancelled pairing",
+        )
+    if is_bye and result not in {"pending", "bye"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bye pairing requires bye result",
+        )
+    if not is_bye and result == "bye":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bye result requires a bye pairing",
+        )
+
+
+async def _name_for_user(session: AsyncSession, user_id: uuid.UUID | None) -> str | None:
+    if user_id is None:
+        return None
+    profile = await _profile_for_user(session, user_id)
+    return profile.full_name if profile else None
+
+
+async def _upsert_game_for_pairing(session: AsyncSession, pairing: Pairing) -> Game | None:
+    if pairing.result == "pending":
+        return None
+    result = await session.execute(select(Game).where(Game.pairing_id == pairing.id))
+    game = result.scalar_one_or_none()
+    if game is None:
+        game = Game(pairing_id=pairing.id, source="tournament")
+        session.add(game)
+    game.tournament_id = pairing.tournament_id
+    game.round_id = pairing.round_id
+    game.white_user_id = pairing.white_user_id
+    game.black_user_id = pairing.black_user_id
+    game.white_name = await _name_for_user(session, pairing.white_user_id)
+    game.black_name = await _name_for_user(session, pairing.black_user_id)
+    game.result = pairing.result
+    game.played_at = pairing.result_reported_at
+    await session.flush()
+    return game
+
+
+async def submit_pairing_result(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    pairing_id: uuid.UUID,
+    payload: ResultSubmitRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> PairingResponse:
+    pairing = await session.get(Pairing, pairing_id)
+    if pairing is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pairing not found")
+    _validate_result_for_pairing(pairing, payload.result)
+    before = pairing_audit_snapshot(pairing)
+    pairing.result = payload.result
+    if payload.result == "pending":
+        pairing.status = "scheduled"
+        pairing.result_reported_by = None
+        pairing.result_reported_at = None
+    else:
+        pairing.status = "completed"
+        pairing.result_reported_by = admin_id
+        pairing.result_reported_at = utc_now()
+    await session.flush()
+    await _upsert_game_for_pairing(session, pairing)
+    await create_admin_action_log(
+        db=session,
+        admin_id=admin_id,
+        action="pairing.result_submitted",
+        entity_type="pairing",
+        entity_id=pairing.id,
+        before=before,
+        after=pairing_audit_snapshot(pairing),
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+    await session.commit()
+    await session.refresh(pairing)
+    return await build_pairing_response(session, pairing)
+
+
+async def list_user_pairings(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    tournament_id: uuid.UUID | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> UserPairingListResponse:
+    statement = select(Pairing).where(
+        or_(Pairing.white_user_id == user_id, Pairing.black_user_id == user_id)
+    )
+    if tournament_id is not None:
+        statement = statement.where(Pairing.tournament_id == tournament_id)
+    total = await session.scalar(select(func.count()).select_from(statement.subquery()))
+    result = await session.execute(
+        statement.order_by(Pairing.created_at.desc(), Pairing.id.desc()).limit(limit).offset(offset)
+    )
+    pairings = result.scalars().all()
+    return UserPairingListResponse(
+        items=[await build_pairing_response(session, pairing) for pairing in pairings],
+        limit=limit,
+        offset=offset,
+        total=total or 0,
+    )
+
+
+def _empty_standing(user_id: uuid.UUID, profile: Profile) -> dict[str, Any]:
+    return {
+        "user_id": user_id,
+        "username": profile.username,
+        "full_name": profile.full_name,
+        "points": 0.0,
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "byes": 0,
+        "games_played": 0,
+    }
+
+
+def _add_win(row: dict[str, Any], points: float = 1.0) -> None:
+    row["points"] += points
+    row["wins"] += 1
+    row["games_played"] += 1
+
+
+def _add_loss(row: dict[str, Any]) -> None:
+    row["losses"] += 1
+    row["games_played"] += 1
+
+
+def _add_draw(row: dict[str, Any]) -> None:
+    row["points"] += 0.5
+    row["draws"] += 1
+    row["games_played"] += 1
+
+
+async def compute_tournament_standings(
+    session: AsyncSession, tournament_id: uuid.UUID
+) -> StandingsResponse:
+    await get_admin_tournament(session, tournament_id)
+    registration_result = await session.execute(
+        select(TournamentRegistration.user_id, Profile)
+        .join(Profile, Profile.user_id == TournamentRegistration.user_id)
+        .where(
+            TournamentRegistration.tournament_id == tournament_id,
+            TournamentRegistration.status == "approved",
+        )
+    )
+    rows: dict[uuid.UUID, dict[str, Any]] = {
+        user_id: _empty_standing(user_id, profile)
+        for user_id, profile in registration_result.all()
+    }
+    pairing_result = await session.execute(
+        select(Pairing).where(
+            Pairing.tournament_id == tournament_id,
+            Pairing.status == "completed",
+            Pairing.result.in_(SCORING_RESULTS),
+        )
+    )
+    for pairing in pairing_result.scalars():
+        white = rows.get(pairing.white_user_id) if pairing.white_user_id else None
+        black = rows.get(pairing.black_user_id) if pairing.black_user_id else None
+        match pairing.result:
+            case "white_win":
+                if white:
+                    _add_win(white)
+                if black:
+                    _add_loss(black)
+            case "black_win":
+                if black:
+                    _add_win(black)
+                if white:
+                    _add_loss(white)
+            case "draw":
+                if white:
+                    _add_draw(white)
+                if black:
+                    _add_draw(black)
+            case "white_forfeit":
+                if black:
+                    _add_win(black)
+                if white:
+                    _add_loss(white)
+            case "black_forfeit":
+                if white:
+                    _add_win(white)
+                if black:
+                    _add_loss(black)
+            case "double_forfeit":
+                if white:
+                    _add_loss(white)
+                if black:
+                    _add_loss(black)
+            case "bye":
+                player = white or black
+                if player:
+                    player["points"] += 1.0
+                    player["wins"] += 1
+                    player["byes"] += 1
+                    player["games_played"] += 1
+
+    sorted_rows = sorted(
+        rows.values(),
+        key=lambda row: (-row["points"], -row["wins"], -row["draws"], row["username"]),
+    )
+    return StandingsResponse(
+        tournament_id=tournament_id,
+        items=[
+            StandingRowResponse(rank=index + 1, **row)
+            for index, row in enumerate(sorted_rows)
+        ],
+    )
+
+
+async def compute_public_standings_by_slug(session: AsyncSession, slug: str) -> StandingsResponse:
+    tournament = await get_visible_tournament_model_by_slug(session, slug)
+    return await compute_tournament_standings(session, tournament.id)

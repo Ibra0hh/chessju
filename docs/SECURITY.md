@@ -41,3 +41,23 @@ Phase 5 tournament security rules:
   approved registrations
 - Admin tournament, time-control, and registration mutations write audit log entries
 - Public tournament endpoints hide draft and soft-deleted tournaments
+
+Phase 6 playing-flow security rules:
+
+- Round, pairing, and result admin endpoints require `admin` or `super_admin`
+- Manual pairings require approved tournament registrants
+- A player cannot appear twice in the same active round
+- Pairing result submission is admin-only in this phase
+- Cancelled pairings cannot receive results
+- Public round and pairing endpoints hide draft rounds
+- Round, pairing, and result mutations write audit log entries
+
+Phase 6 scoring:
+
+- `white_win`: white +1
+- `black_win`: black +1
+- `draw`: both +0.5
+- `white_forfeit`: black +1
+- `black_forfeit`: white +1
+- `double_forfeit`: both +0
+- `bye`: player +1

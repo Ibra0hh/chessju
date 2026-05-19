@@ -80,3 +80,29 @@ Phase 5 tournament endpoints:
 Public tournament lists show non-deleted visible tournaments and support `limit`, `offset`, and
 `status`. Registration requires authentication and only works while tournament status is
 `registration_open`.
+
+Phase 6 tournament playing-flow endpoints:
+
+- `GET /api/v1/tournaments/{slug}/rounds`
+- `GET /api/v1/tournaments/{slug}/rounds/{round_number}`
+- `GET /api/v1/tournaments/{slug}/pairings`
+- `GET /api/v1/tournaments/{slug}/standings`
+- `GET /api/v1/users/me/pairings`
+- `POST /api/v1/admin/tournaments/{tournament_id}/rounds`
+- `GET /api/v1/admin/tournaments/{tournament_id}/rounds`
+- `GET /api/v1/admin/rounds/{round_id}`
+- `PATCH /api/v1/admin/rounds/{round_id}`
+- `POST /api/v1/admin/rounds/{round_id}/publish`
+- `POST /api/v1/admin/rounds/{round_id}/start`
+- `POST /api/v1/admin/rounds/{round_id}/complete`
+- `POST /api/v1/admin/rounds/{round_id}/cancel`
+- `POST /api/v1/admin/rounds/{round_id}/pairings`
+- `POST /api/v1/admin/rounds/{round_id}/pairings/bulk`
+- `GET /api/v1/admin/rounds/{round_id}/pairings`
+- `PATCH /api/v1/admin/pairings/{pairing_id}`
+- `DELETE /api/v1/admin/pairings/{pairing_id}`
+- `POST /api/v1/admin/pairings/{pairing_id}/result`
+- `GET /api/v1/admin/tournaments/{tournament_id}/standings`
+
+Round drafts are admin-only. Public users see published, in-progress, completed, and cancelled
+rounds. Pairings are manual in this phase. Standings are computed live from completed pairings.

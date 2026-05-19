@@ -19,6 +19,18 @@ TournamentCreateStatus = Literal["draft", "published", "registration_open", "reg
 TournamentFormat = Literal["swiss", "round_robin", "knockout", "arena", "manual"]
 TimeControlType = Literal["bullet", "blitz", "rapid", "classical", "custom"]
 RegistrationStatus = Literal["pending", "approved", "waitlisted", "cancelled", "rejected"]
+RoundStatus = Literal["draft", "published", "in_progress", "completed", "cancelled"]
+PairingStatus = Literal["scheduled", "active", "completed", "disputed", "cancelled"]
+PairingResult = Literal[
+    "pending",
+    "white_win",
+    "black_win",
+    "draw",
+    "white_forfeit",
+    "black_forfeit",
+    "double_forfeit",
+    "bye",
+]
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -242,3 +254,133 @@ class UserTournamentRegistrationListResponse(BaseModel):
 
 class DeleteTournamentResponse(BaseModel):
     deleted: bool
+
+
+class PlayerSummaryResponse(BaseModel):
+    id: uuid.UUID
+    username: str
+    full_name: str
+
+
+class RoundCreateRequest(BaseModel):
+    round_number: int | None = Field(default=None, gt=0)
+    title: str | None = Field(default=None, max_length=120)
+    starts_at: datetime | None = None
+
+    @field_validator("title")
+    @classmethod
+    def strip_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Title cannot be blank")
+        return normalized
+
+
+class RoundUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, max_length=120)
+    starts_at: datetime | None = None
+    status: RoundStatus | None = None
+
+    @field_validator("title")
+    @classmethod
+    def strip_optional_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Title cannot be blank")
+        return normalized
+
+
+class RoundResponse(BaseModel):
+    id: uuid.UUID
+    tournament_id: uuid.UUID
+    round_number: int
+    title: str | None
+    status: str
+    starts_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoundListResponse(BaseModel):
+    items: list[RoundResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class PairingCreateRequest(BaseModel):
+    board_number: int | None = Field(default=None, gt=0)
+    white_user_id: uuid.UUID | None = None
+    black_user_id: uuid.UUID | None = None
+    result: PairingResult = "pending"
+
+
+class PairingBulkCreateRequest(BaseModel):
+    pairings: list[PairingCreateRequest] = Field(min_length=1, max_length=200)
+
+
+class PairingUpdateRequest(BaseModel):
+    board_number: int | None = Field(default=None, gt=0)
+    white_user_id: uuid.UUID | None = None
+    black_user_id: uuid.UUID | None = None
+    status: PairingStatus | None = None
+
+
+class ResultSubmitRequest(BaseModel):
+    result: PairingResult
+
+
+class PairingResponse(BaseModel):
+    id: uuid.UUID
+    round_id: uuid.UUID
+    tournament_id: uuid.UUID
+    board_number: int
+    white_user: PlayerSummaryResponse | None
+    black_user: PlayerSummaryResponse | None
+    status: str
+    result: str
+    result_reported_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class PairingListResponse(BaseModel):
+    items: list[PairingResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class RoundDetailResponse(RoundResponse):
+    pairings: list[PairingResponse]
+
+
+class StandingRowResponse(BaseModel):
+    rank: int
+    user_id: uuid.UUID
+    username: str
+    full_name: str
+    points: float
+    wins: int
+    losses: int
+    draws: int
+    byes: int
+    games_played: int
+
+
+class StandingsResponse(BaseModel):
+    tournament_id: uuid.UUID
+    items: list[StandingRowResponse]
+
+
+class UserPairingListResponse(BaseModel):
+    items: list[PairingResponse]
+    limit: int
+    offset: int
+    total: int

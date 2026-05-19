@@ -100,9 +100,10 @@ Local URLs:
 ## Current Backend Scope
 
 Implemented backend foundations now include auth/users, admin audit logs, files, news,
-announcements, home content, time controls, tournaments, and tournament registration MVP behavior.
-Rounds, pairings, results, standings, leaderboard, PGN, Stockfish, Chess.com sync, chat, and
-frontend code are intentionally delayed.
+announcements, home content, time controls, tournaments, tournament registration MVP behavior,
+manual rounds, manual pairings, result entry, linked tournament game records, and basic tournament
+standings. Global JU leaderboard, PGN, Stockfish, Chess.com sync, chat, and frontend code are
+intentionally delayed.
 
 ## Notes
 
