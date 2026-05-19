@@ -274,6 +274,30 @@ client is intentionally simple and focused on connecting cleanly to the existing
   and principal variation shown when an analysis report exists
 - PGN file upload, engine arrows, evaluation graph, and draggable board input intentionally delayed
 
+### Phase 18: Flutter Chess Clock UI
+
+- Clock screen available at `/clock`
+- Clock route exposed through a timer action in the authenticated app bar
+- Casual clock setup with presets:
+  - `1 + 0`
+  - `1 + 1`
+  - `3 + 0`
+  - `3 + 2`
+  - `5 + 0`
+  - `5 + 3`
+  - `10 + 0`
+  - `15 + 10`
+  - custom base/increment
+- Responsive two-player timer panels with active, inactive, and warning visual states
+- Client-side countdown for responsive tapping
+- Backend calls only for meaningful events, not every tick
+- Start, pause, resume, switch turn, adjust, flag, complete, reset, and cancel actions
+- Switch-turn applies increment locally before sending the event snapshot
+- Event history panel reads stored backend clock events
+- Simple local UI settings for clock color theme, sound placeholder, and fullscreen placeholder
+- Official tournament/pairing clock backend exists, but a dedicated official Flutter flow is not
+  implemented yet
+
 ## Current Database State
 
 Current Alembic head:
@@ -358,6 +382,7 @@ Endpoint groups currently implemented:
 - Flutter app foundation routes and API client
 - Flutter vertical-slice screens consuming backend content/authenticated endpoints
 - Flutter game library, PGN paste, game detail, board replay, and analysis report UI
+- Flutter chess clock UI for casual clock sessions and backend event history
 
 ## Current Worker And Queue State
 
@@ -404,6 +429,17 @@ Endpoint groups currently implemented:
   - `/api/v1/games/{game_id}/analysis`
   - `/api/v1/analysis/jobs/{job_id}`
   - `/api/v1/analysis/reports/{report_id}`
+  - `/api/v1/clock/sessions`
+  - `/api/v1/clock/sessions/{session_id}/events`
+  - `/api/v1/clock/sessions/{session_id}/start`
+  - `/api/v1/clock/sessions/{session_id}/pause`
+  - `/api/v1/clock/sessions/{session_id}/resume`
+  - `/api/v1/clock/sessions/{session_id}/switch-turn`
+  - `/api/v1/clock/sessions/{session_id}/adjust`
+  - `/api/v1/clock/sessions/{session_id}/flag`
+  - `/api/v1/clock/sessions/{session_id}/complete`
+  - `/api/v1/clock/sessions/{session_id}/reset`
+  - `/api/v1/clock/sessions/{session_id}/cancel`
   - `/api/v1/notifications`
   - `/api/v1/notifications/unread-count`
   - `/api/v1/notifications/{notification_id}/read`
@@ -419,7 +455,7 @@ Latest known verification at this checkpoint:
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Flutter analyze: passed
-- Flutter test: `15 passed`
+- Flutter test: `20 passed`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -478,6 +514,9 @@ Latest known verification at this checkpoint:
 - Realtime clock broadcast
 - Player-controlled official tournament clocks
 - Clock drift reconciliation or anti-cheat logic
+- Dedicated Flutter official tournament/pairing clock flow
+- Flutter clock sound/vibration/fullscreen implementation
+- Flutter clock offline mode
 - Group chat
 - Tournament chat
 - Media messages

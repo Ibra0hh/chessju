@@ -63,7 +63,7 @@ verification.
 
 ## Current App Foundation
 
-Implemented in Phases 15-17:
+Implemented in Phases 15-18:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
 - iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
@@ -91,6 +91,12 @@ Implemented in Phases 15-17:
 - PGN paste import screen
 - Analysis request/status/report UI for existing Stockfish analysis endpoints
 - Basic move classification, centipawn loss, best move, and evaluation display
+- Chess clock screen available at `/clock`
+- Casual clock setup with presets and custom base/increment fields
+- Client-side countdown with backend event snapshots for meaningful actions only
+- Start, pause, resume, switch-turn, flag, complete, reset, cancel, and adjust-time actions
+- Clock event history panel
+- Clock visual settings placeholders for color theme, sound, and fullscreen
 
 ## Auth Flow
 
@@ -164,6 +170,7 @@ Current screens:
 - Games list
 - Game detail and replay board
 - PGN import
+- Chess clock
 - Notifications
 - Profile
 
@@ -190,6 +197,17 @@ Other screen endpoints:
 - Game analysis state: `GET /api/v1/games/{game_id}/analysis`
 - Analysis job: `GET /api/v1/analysis/jobs/{job_id}`
 - Analysis report: `GET /api/v1/analysis/reports/{report_id}`
+- Clock create: `POST /api/v1/clock/sessions`
+- Clock events: `GET /api/v1/clock/sessions/{session_id}/events`
+- Clock start: `POST /api/v1/clock/sessions/{session_id}/start`
+- Clock pause: `POST /api/v1/clock/sessions/{session_id}/pause`
+- Clock resume: `POST /api/v1/clock/sessions/{session_id}/resume`
+- Clock switch turn: `POST /api/v1/clock/sessions/{session_id}/switch-turn`
+- Clock adjust: `POST /api/v1/clock/sessions/{session_id}/adjust`
+- Clock flag: `POST /api/v1/clock/sessions/{session_id}/flag`
+- Clock complete: `POST /api/v1/clock/sessions/{session_id}/complete`
+- Clock reset: `POST /api/v1/clock/sessions/{session_id}/reset`
+- Clock cancel: `POST /api/v1/clock/sessions/{session_id}/cancel`
 - Notifications: `GET /api/v1/notifications`
 - Unread count: `GET /api/v1/notifications/unread-count`
 - Mark notification read: `POST /api/v1/notifications/{notification_id}/read`
@@ -221,17 +239,31 @@ Game library and analysis-board behavior:
 - Queued/running/failed/completed analysis states are shown, with manual refresh for job status.
 - Completed reports show approximate accuracies, classification counts, selected-move evaluation, centipawn loss, best move, and principal variation data.
 
+Chess clock behavior:
+
+- The Flutter client runs the visible countdown locally for responsive tapping.
+- The backend is called only for meaningful events: create, start, pause, resume, switch turn,
+  adjust time, flag, complete, reset, and cancel.
+- Switch-turn applies increment on the client before sending the snapshot to the backend.
+- Event history reads backend `clock_events` snapshots and is newest-first in the UI.
+- The current UI focuses on casual clock sessions. Official tournament/pairing clock workflows are
+  backend-supported but not yet exposed as a dedicated Flutter flow.
+- Sound and fullscreen controls are UI placeholders; no audio/vibration/fullscreen implementation is
+  active yet.
+
 Still placeholder or future UI work:
 
 - PGN file upload UI
 - Chess.com import UI
-- Chess clock UI
+- Official tournament clock setup flow
 - Friends/direct chat UI
 - SSE event consumption
 - Admin dashboard UI
 - Draggable board input
 - Engine arrows
 - Evaluation graph
+- Sound/vibration cues for chess clock
+- Offline clock mode
 
 ## Recommended Next Flutter Phase
 

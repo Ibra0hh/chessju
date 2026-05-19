@@ -1,6 +1,7 @@
 import 'package:chessju_app/features/auth/presentation/login_screen.dart';
 import 'package:chessju_app/features/auth/presentation/register_screen.dart';
 import 'package:chessju_app/features/auth/presentation/splash_screen.dart';
+import 'package:chessju_app/features/clock/presentation/clock_screen.dart';
 import 'package:chessju_app/features/games/presentation/game_detail_screen.dart';
 import 'package:chessju_app/features/games/presentation/games_screen.dart';
 import 'package:chessju_app/features/games/presentation/pgn_import_screen.dart';
@@ -55,6 +56,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/leaderboard',
             builder: (context, state) => const LeaderboardScreen(),
+          ),
+          GoRoute(
+            path: '/clock',
+            builder: (context, state) => const ClockScreen(),
           ),
           GoRoute(
             path: '/games',

@@ -2,6 +2,7 @@ import 'package:chessju_app/core/errors/api_error.dart';
 import 'package:chessju_app/core/pagination/pagination.dart';
 import 'package:chessju_app/core/storage/token_storage.dart';
 import 'package:chessju_app/features/auth/data/auth_models.dart';
+import 'package:chessju_app/features/clock/data/clock_models.dart';
 import 'package:chessju_app/features/games/data/game_models.dart';
 import 'package:chessju_app/shared/models/content_models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -161,6 +162,64 @@ void main() {
 
     expect(notification.type, 'message.received');
     expect(notification.readAt, isNull);
+  });
+
+  test('ClockSession parses sample backend response', () {
+    final session = ClockSession.fromJson({
+      'id': 'c1',
+      'tournament_id': null,
+      'pairing_id': null,
+      'white_user_id': 'u1',
+      'black_user_id': 'u2',
+      'base_seconds': 300,
+      'increment_seconds': 3,
+      'delay_seconds': 0,
+      'white_remaining_ms': 300000,
+      'black_remaining_ms': 300000,
+      'active_color': 'none',
+      'status': 'setup',
+      'result': null,
+      'created_by': 'u1',
+      'last_event_at': null,
+      'started_at': null,
+      'completed_at': null,
+      'created_at': '2026-05-19T12:00:00Z',
+      'updated_at': '2026-05-19T12:00:00Z',
+    });
+
+    expect(session.baseSeconds, 300);
+    expect(session.incrementSeconds, 3);
+    expect(session.status, 'setup');
+    expect(session.isSetup, isTrue);
+  });
+
+  test('ClockEvent parses sample backend response', () {
+    final event = ClockEvent.fromJson({
+      'id': 'e1',
+      'clock_session_id': 'c1',
+      'event_type': 'switch_turn',
+      'actor_user_id': 'u1',
+      'white_remaining_ms': 297000,
+      'black_remaining_ms': 300000,
+      'active_color': 'black',
+      'client_timestamp': '2026-05-19T12:00:00Z',
+      'server_timestamp': '2026-05-19T12:00:01Z',
+      'metadata': {'source': 'test'},
+    });
+
+    expect(event.eventType, 'switch_turn');
+    expect(event.activeColor, 'black');
+    expect(event.metadata['source'], 'test');
+  });
+
+  test('Clock time formatting and validation helpers work', () {
+    expect(formatClockTime(300000), '5:00');
+    expect(formatClockTime(61000), '1:01');
+    expect(formatClockTime(0), '0:00');
+    expect(validateBaseSeconds(0), isNotNull);
+    expect(validateBaseSeconds(60), isNull);
+    expect(validateIncrementSeconds(-1), isNotNull);
+    expect(validateIncrementSeconds(0), isNull);
   });
 
   test('GameDetail parses backend game detail response', () {

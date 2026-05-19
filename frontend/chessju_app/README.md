@@ -40,9 +40,17 @@ Current vertical slice:
 - Game detail with read-only FEN board replay
 - PGN paste import
 - Stockfish analysis request/status/report display
+- Chess clock screen with casual setup, local countdown, backend event snapshots, and event history
 
 Current game-review limitations:
 
 - PGN file upload UI is not implemented yet, though the backend endpoint exists.
 - The board is replay-only; there is no draggable move input.
 - Engine arrows and evaluation graph are not implemented yet.
+
+Current clock limitations:
+
+- The Flutter flow creates casual clock sessions only.
+- Official tournament/pairing clock backend support is not exposed as a dedicated Flutter workflow yet.
+- Sound and fullscreen controls are placeholders.
+- There is no offline mode or clock drift reconciliation UI.
