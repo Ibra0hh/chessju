@@ -121,6 +121,26 @@ cd backend
 The smoke script avoids printing tokens or passwords and returns a nonzero exit code for critical
 failures. See `docs/SMOKE_TESTS.md` for the full local demo flow.
 
+## Production Deployment Foundation
+
+Phase 23 adds production-style deployment preparation without deploying to a real server:
+
+- `infra/docker-compose.prod.yml` defines Caddy, API, worker, Postgres, and Valkey.
+- `infra/Caddyfile` reverse proxies public HTTP/HTTPS traffic to the API.
+- `.env.production.example` is a safe placeholder template for server configuration.
+- `infra/backup/` contains Postgres backup and restore helper scripts.
+- `docs/DEPLOYMENT.md`, `docs/BACKUP_RESTORE.md`, and `docs/PRODUCTION_CHECKLIST.md` document the
+  deployment path, restore process, and preflight checklist.
+
+Validate production compose locally without starting it:
+
+```powershell
+docker compose -f infra/docker-compose.prod.yml config
+```
+
+Do not commit `.env.production`, backup files, database dumps, or real secrets. Do not deploy to a
+real paid server until Ibrahim explicitly approves it.
+
 Stockfish analysis settings:
 
 - `CHESSJU_STOCKFISH_PATH`
@@ -230,8 +250,8 @@ notification/profile screens, game detail replay, PGN paste import, analysis rep
 casual chess clock UI that stores meaningful backend events without sending every tick,
 friends/direct chat screens for requests, blocks, conversations, and text messages, and an admin
 tournament manager button for Swiss/Round Robin pairing generation, plus local release-candidate
-demo seeding and API smoke-test tooling. Advanced tie-breaks, Lichess import, scheduled sync, group
-chat, tournament chat, media
+demo seeding, API smoke-test tooling, and production deployment foundation files. Advanced
+tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media
 messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, PGN file
 upload UI, user search/discovery UI, admin player picker/search, drag/drop pairing UI,
 SSE-driven chat refresh, engine arrows, evaluation graph behavior, FIDE-certified pairing, advanced

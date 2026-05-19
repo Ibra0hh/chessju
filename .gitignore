@@ -18,11 +18,16 @@ env/
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Local storage and database data
 storage/
 uploads/
+backups/
 *.sqlite3
+*.dump
+*.sql
+*.bak
 
 # Legacy PocketBase artifacts present before ChessJU setup
 /pb_data/

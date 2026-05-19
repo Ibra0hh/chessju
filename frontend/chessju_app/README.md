@@ -41,6 +41,15 @@ flutter test
 flutter build web
 ```
 
+Production-style web build prep:
+
+```powershell
+flutter build web --dart-define=CHESSJU_API_BASE_URL=https://chessju.example.com
+```
+
+The build output is `build/web`. Deployment is not part of Phase 23; see
+`../../docs/DEPLOYMENT.md` for the backend/Caddy deployment foundation.
+
 See `../../docs/FLUTTER_APP.md` for the current app structure and integration notes.
 
 Current vertical slice:

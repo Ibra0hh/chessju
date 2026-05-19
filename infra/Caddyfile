@@ -1,3 +1,15 @@
-:80 {
-  reverse_proxy api:8000
+{
+	email {$CADDY_ACME_EMAIL:admin@example.com}
+}
+
+{$CADDY_SITE_ADDRESS:http://localhost} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+	}
+
+	reverse_proxy api:8000
 }

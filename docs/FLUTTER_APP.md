@@ -410,6 +410,24 @@ Then verify these Flutter screens load with seeded data:
 - Friends, conversations, message send, and notifications
 - Admin dashboard, tournament manager, pairing generation, leaderboard recompute, and audit logs
 
+## Production Web Build Prep
+
+Phase 23 does not deploy Flutter web. To prepare a production-style web build later:
+
+```powershell
+cd frontend/chessju_app
+flutter build web --dart-define=CHESSJU_API_BASE_URL=https://chessju.example.com
+```
+
+The output appears in:
+
+```text
+frontend/chessju_app/build/web
+```
+
+Current limitation: `CHESSJU_API_BASE_URL` is a compile-time Dart define. If ChessJU needs one
+static build to move across environments, add runtime web configuration in a later phase.
+
 ## Recommended Next Flutter Phase
 
 Recommended next UI phase:

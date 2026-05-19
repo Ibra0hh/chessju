@@ -1,5 +1,6 @@
-# Backups
+# ChessJU Backups
 
-Phase 1 only reserves this folder for backup documentation and scripts.
+This folder contains local production-style Postgres backup and restore helpers.
 
-The first backup approach will be `pg_dump`. Restic and pgBackRest are delayed until later deployment phases.
+Use `docs/BACKUP_RESTORE.md` as the source of truth before running restore commands. Restore is
+destructive and requires explicit confirmation flags.

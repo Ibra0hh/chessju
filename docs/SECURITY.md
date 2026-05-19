@@ -257,6 +257,19 @@ Phase 22 release-candidate QA tooling rules:
 - Smoke tests should use mocked or skipped behavior for external services rather than depending on
   live Chess.com network access
 
+Phase 23 production deployment safety rules:
+
+- Production configuration belongs in `.env.production`, never in Git
+- `.env.production.example` must contain placeholders only
+- Caddy is the only public HTTP/HTTPS entrypoint in production compose
+- API, Postgres, and Valkey are internal-only services in production compose
+- Postgres and Valkey ports must not be published publicly
+- Backups and database dumps must not be committed
+- Restore scripts require explicit confirmation because restore is destructive
+- Demo seed scripts must not run against production databases
+- Flutter web production builds must use the approved production API URL
+- No real server deployment should happen without explicit approval
+
 Security review notes:
 
 - `.env` remains ignored and must not be committed

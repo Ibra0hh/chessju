@@ -1,10 +1,42 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file:
+      - path: ../.env.production
+        required: false
+    environment:
+      CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-http://localhost}
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-admin@example.com}
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_started
+
   api:
     build:
       context: ../backend
       dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     env_file:
-      - ../.env
+      - path: ../.env.production
+        required: false
+    environment:
+      CHESSJU_ENVIRONMENT: ${CHESSJU_ENVIRONMENT:-production}
+      CHESSJU_DEBUG: ${CHESSJU_DEBUG:-false}
+      CHESSJU_DATABASE_URL: ${CHESSJU_DATABASE_URL:-postgresql+psycopg://chessju:change-me@postgres:5432/chessju}
+      CHESSJU_VALKEY_URL: ${CHESSJU_VALKEY_URL:-redis://valkey:6379/0}
+      CHESSJU_LOCAL_STORAGE_ROOT: ${CHESSJU_LOCAL_STORAGE_ROOT:-/data/storage}
+      CHESSJU_STOCKFISH_PATH: ${CHESSJU_STOCKFISH_PATH:-/usr/games/stockfish}
+    volumes:
+      - chessju_storage:/data/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -15,8 +47,20 @@ services:
     build:
       context: ..
       dockerfile: worker/Dockerfile
+    restart: unless-stopped
     env_file:
-      - ../.env
+      - path: ../.env.production
+        required: false
+    environment:
+      CHESSJU_ENVIRONMENT: ${CHESSJU_ENVIRONMENT:-production}
+      CHESSJU_DEBUG: ${CHESSJU_DEBUG:-false}
+      CHESSJU_DATABASE_URL: ${CHESSJU_DATABASE_URL:-postgresql+psycopg://chessju:change-me@postgres:5432/chessju}
+      CHESSJU_VALKEY_URL: ${CHESSJU_VALKEY_URL:-redis://valkey:6379/0}
+      CHESSJU_LOCAL_STORAGE_ROOT: ${CHESSJU_LOCAL_STORAGE_ROOT:-/data/storage}
+      CHESSJU_STOCKFISH_PATH: ${CHESSJU_STOCKFISH_PATH:-/usr/games/stockfish}
+      PYTHONPATH: /workspace/backend:/workspace
+    volumes:
+      - chessju_storage:/data/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -25,35 +69,32 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     env_file:
-      - ../.env
+      - path: ../.env.production
+        required: false
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-chessju}
+      POSTGRES_USER: ${POSTGRES_USER:-chessju}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
     volumes:
       - chessju_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chessju -d chessju"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-chessju} -d $${POSTGRES_DB:-chessju}"]
       interval: 10s
       timeout: 5s
       retries: 10
 
   valkey:
     image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: ["valkey-server", "--appendonly", "yes"]
     volumes:
       - chessju_valkey_data:/data
-
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - api
 
 volumes:
   chessju_postgres_data:
   chessju_valkey_data:
+  chessju_storage:
   caddy_data:
   caddy_config:

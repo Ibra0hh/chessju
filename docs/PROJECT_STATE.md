@@ -8,8 +8,8 @@ Checkpoint date: 2026-05-19
 - Owner: Ibrahim
 - Purpose: custom chess club platform for University of Jordan members
 
-ChessJU now has a backend MVP foundation, a Flutter/Dart app foundation, and release-candidate QA
-tooling for local demos and repeatable smoke checks. The Flutter client is intentionally practical
+ChessJU now has a backend MVP foundation, a Flutter/Dart app foundation, release-candidate QA
+tooling, and production-style deployment preparation. The Flutter client is intentionally practical
 and focused on connecting cleanly to the existing backend.
 
 ## Architecture
@@ -389,6 +389,22 @@ and focused on connecting cleanly to the existing backend.
 - No production deployment, external object storage, push notifications, or architecture changes
   were added in this phase
 
+### Phase 23: Production Deployment Foundation
+
+- Production-style compose file under `infra/docker-compose.prod.yml`
+- Caddy reverse proxy config under `infra/Caddyfile`
+- Safe production environment template under `.env.production.example`
+- Production compose includes Caddy, API, worker, PostgreSQL, and Valkey
+- Caddy is the only public HTTP/HTTPS entrypoint in production compose
+- API, PostgreSQL, and Valkey do not publish public ports in production compose
+- Named Docker volumes are used for Postgres, Valkey, local storage, and Caddy state
+- PowerShell and POSIX shell backup/restore scripts exist under `infra/backup/`
+- Restore scripts require explicit confirmation flags
+- Deployment, backup/restore, and production checklist docs were added
+- Flutter web deployment is documented as build-only preparation with compile-time API base URL
+- No real server deployment was performed
+- No external object storage or push notifications were added
+
 ## Current Database State
 
 Current Alembic head:
@@ -479,6 +495,8 @@ Endpoint groups currently implemented:
 - Flutter admin dashboard, tournament manager, leaderboard recompute, and audit log UI
 - Flutter admin automatic pairing controls
 - Local demo seed and API smoke-test scripts for release-candidate QA
+- Production compose, Caddy, environment template, backup/restore scripts, deployment docs, and
+  production checklist
 
 ## Current Worker And Queue State
 
@@ -598,9 +616,9 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 21 commit before Phase 22:
-  `c70fc635bdda00457832224a54087d19f15f8120`
-- Git status before Phase 22 implementation: clean
+- Latest completed Phase 22 commit before Phase 23:
+  `6e161499bcb68731fd97f4a970b89ad66e7a1410`
+- Git status before Phase 23 implementation: clean
 
 ## Important Permanent Rules
 
@@ -629,8 +647,12 @@ Latest known verification at this checkpoint:
 - Rate limits should protect expensive and abuse-prone endpoints.
 - Do not commit secrets.
 - Do not commit `.env`.
+- Do not commit `.env.production`.
+- Do not commit backup files or database dumps.
 - Demo seed credentials are local-only and must never be treated as production credentials.
 - Demo seeding must remain explicit and dev-only.
+- Caddy is the only public HTTP/HTTPS entrypoint in production compose.
+- API, PostgreSQL, and Valkey stay internal-only in production compose.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.
 - Flutter must treat backend REST responses as authoritative.
 - Flutter must refetch official state after realtime hints.
@@ -639,6 +661,7 @@ Latest known verification at this checkpoint:
 
 - Full Flutter UI implementation beyond the current vertical slice
 - Advanced tie-breaks
+- Real server production deployment
 - Production monitoring stack
 - External object storage
 - Push notifications
