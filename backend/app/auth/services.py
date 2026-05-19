@@ -110,24 +110,24 @@ async def register_user(
             status_code=status.HTTP_409_CONFLICT, detail="Username is already registered"
         )
 
-    member_role = await _get_member_role(session)
-    user = User(email=email, password_hash=hash_password(payload.password))
-    session.add(user)
-    await session.flush()
-
-    profile = Profile(
-        user_id=user.id,
-        username=payload.username,
-        full_name=payload.full_name,
-        university_id=payload.university_id,
-        chesscom_username=payload.chesscom_username,
-    )
-    preferences = UserPreferences(user_id=user.id)
-    user_role = UserRole(user_id=user.id, role_id=member_role.id)
-    session.add_all([profile, preferences, user_role])
-    await session.flush()
-
     try:
+        member_role = await _get_member_role(session)
+        user = User(email=email, password_hash=hash_password(payload.password))
+        session.add(user)
+        await session.flush()
+
+        profile = Profile(
+            user_id=user.id,
+            username=payload.username,
+            full_name=payload.full_name,
+            university_id=payload.university_id,
+            chesscom_username=payload.chesscom_username,
+        )
+        preferences = UserPreferences(user_id=user.id)
+        user_role = UserRole(user_id=user.id, role_id=member_role.id)
+        session.add_all([profile, preferences, user_role])
+        await session.flush()
+
         tokens = await _create_token_response(session, user, user_agent, ip_address)
         await session.commit()
     except IntegrityError as exc:

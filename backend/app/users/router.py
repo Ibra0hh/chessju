@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -27,7 +27,7 @@ async def users_me(
 ) -> CurrentUserResponse:
     response = await get_current_user_response(session, current_user.id)
     if response is None:
-        raise RuntimeError("Authenticated user could not be loaded")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
     return response
 
 
