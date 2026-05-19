@@ -18,14 +18,47 @@ final newsProvider =
       return ref.watch(contentRepositoryProvider).fetchNews();
     });
 
+final newsDetailProvider = FutureProvider.autoDispose
+    .family<ArticleDetail, String>((ref, slug) {
+      return ref.watch(contentRepositoryProvider).fetchNewsDetail(slug);
+    });
+
 final tournamentListProvider =
     FutureProvider.autoDispose<PaginatedResponse<TournamentSummary>>((ref) {
       return ref.watch(contentRepositoryProvider).fetchTournaments();
     });
 
-final leaderboardProvider =
-    FutureProvider.autoDispose<PaginatedResponse<LeaderboardRow>>((ref) {
-      return ref.watch(contentRepositoryProvider).fetchLeaderboard();
+final tournamentDetailProvider = FutureProvider.autoDispose
+    .family<TournamentDetail, String>((ref, slug) {
+      return ref.watch(contentRepositoryProvider).fetchTournamentDetail(slug);
+    });
+
+final tournamentRoundsProvider = FutureProvider.autoDispose
+    .family<PaginatedResponse<RoundSummary>, String>((ref, slug) {
+      return ref.watch(contentRepositoryProvider).fetchTournamentRounds(slug);
+    });
+
+final tournamentStandingsProvider = FutureProvider.autoDispose
+    .family<List<StandingRow>, String>((ref, slug) {
+      return ref
+          .watch(contentRepositoryProvider)
+          .fetchTournamentStandings(slug);
+    });
+
+final leaderboardProvider = FutureProvider.autoDispose<LeaderboardContent>((
+  ref,
+) {
+  return ref.watch(contentRepositoryProvider).fetchLeaderboard();
+});
+
+final leaderboardSeasonsProvider =
+    FutureProvider.autoDispose<PaginatedResponse<SeasonSummary>>((ref) {
+      return ref.watch(contentRepositoryProvider).fetchLeaderboardSeasons();
+    });
+
+final gamesProvider =
+    FutureProvider.autoDispose<PaginatedResponse<GameSummary>>((ref) {
+      return ref.watch(contentRepositoryProvider).fetchGames();
     });
 
 final notificationsProvider =
@@ -62,6 +95,13 @@ class ContentRepository {
     );
   }
 
+  Future<ArticleDetail> fetchNewsDetail(String slug) {
+    return _apiClient.get<ArticleDetail>(
+      '/news/$slug',
+      parse: (data) => ArticleDetail.fromJson(_asMap(data)),
+    );
+  }
+
   Future<PaginatedResponse<TournamentSummary>> fetchTournaments() {
     return _apiClient.get<PaginatedResponse<TournamentSummary>>(
       '/tournaments',
@@ -71,29 +111,68 @@ class ContentRepository {
     );
   }
 
-  Future<PaginatedResponse<LeaderboardRow>> fetchLeaderboard() {
-    return _apiClient.get<PaginatedResponse<LeaderboardRow>>(
+  Future<TournamentDetail> fetchTournamentDetail(String slug) {
+    return _apiClient.get<TournamentDetail>(
+      '/tournaments/$slug',
+      parse: (data) => TournamentDetail.fromJson(_asMap(data)),
+    );
+  }
+
+  Future<TournamentRegistration> registerForTournament(String tournamentId) {
+    return _apiClient.post<TournamentRegistration>(
+      '/tournaments/$tournamentId/register',
+      parse: (data) => TournamentRegistration.fromJson(_asMap(data)),
+    );
+  }
+
+  Future<TournamentRegistration> cancelTournamentRegistration(
+    String tournamentId,
+  ) {
+    return _apiClient.delete<TournamentRegistration>(
+      '/tournaments/$tournamentId/registration',
+      parse: (data) => TournamentRegistration.fromJson(_asMap(data)),
+    );
+  }
+
+  Future<PaginatedResponse<RoundSummary>> fetchTournamentRounds(String slug) {
+    return _apiClient.get<PaginatedResponse<RoundSummary>>(
+      '/tournaments/$slug/rounds',
+      queryParameters: const {'limit': 50, 'offset': 0},
+      parse: (data) =>
+          PaginatedResponse.fromJson(_asMap(data), RoundSummary.fromJson),
+    );
+  }
+
+  Future<List<StandingRow>> fetchTournamentStandings(String slug) {
+    return _apiClient.get<List<StandingRow>>(
+      '/tournaments/$slug/standings',
+      parse: (data) => _list(_asMap(data)['items'], StandingRow.fromJson),
+    );
+  }
+
+  Future<LeaderboardContent> fetchLeaderboard() {
+    return _apiClient.get<LeaderboardContent>(
       '/leaderboard',
       queryParameters: const {'limit': 20, 'offset': 0},
-      parse: (data) {
-        final json = _asMap(data);
-        final rows = (json['rows'] as List? ?? const [])
-            .whereType<Map>()
-            .map(
-              (item) =>
-                  LeaderboardRow.fromJson(Map<String, Object?>.from(item)),
-            )
-            .toList();
-        return PaginatedResponse(
-          items: rows,
-          pagination: Pagination.fromJson({
-            'limit': json['limit'],
-            'offset': json['offset'],
-            'total': json['total'],
-            'count': rows.length,
-          }),
-        );
-      },
+      parse: (data) => LeaderboardContent.fromJson(_asMap(data)),
+    );
+  }
+
+  Future<PaginatedResponse<SeasonSummary>> fetchLeaderboardSeasons() {
+    return _apiClient.get<PaginatedResponse<SeasonSummary>>(
+      '/leaderboard/seasons',
+      queryParameters: const {'limit': 20, 'offset': 0},
+      parse: (data) =>
+          PaginatedResponse.fromJson(_asMap(data), SeasonSummary.fromJson),
+    );
+  }
+
+  Future<PaginatedResponse<GameSummary>> fetchGames() {
+    return _apiClient.get<PaginatedResponse<GameSummary>>(
+      '/games',
+      queryParameters: const {'limit': 20, 'offset': 0},
+      parse: (data) =>
+          PaginatedResponse.fromJson(_asMap(data), GameSummary.fromJson),
     );
   }
 
@@ -106,10 +185,44 @@ class ContentRepository {
     );
   }
 
+  Future<NotificationItem> markNotificationRead(String notificationId) {
+    return _apiClient.post<NotificationItem>(
+      '/notifications/$notificationId/read',
+      parse: (data) => NotificationItem.fromJson(_asMap(data)),
+    );
+  }
+
+  Future<void> markAllNotificationsRead() {
+    return _apiClient.post<void>('/notifications/read-all', parse: (_) {});
+  }
+
   Future<int> fetchUnreadNotificationCount() {
     return _apiClient.get<int>(
       '/notifications/unread-count',
       parse: (data) => _asInt(_asMap(data)['unread_count']),
+    );
+  }
+
+  Future<UserProfile> updateProfile({
+    String? fullName,
+    String? universityId,
+    String? chesscomUsername,
+  }) {
+    final data = <String, Object?>{};
+    if (fullName != null) {
+      data['full_name'] = fullName;
+    }
+    if (universityId != null) {
+      data['university_id'] = universityId;
+    }
+    if (chesscomUsername != null) {
+      data['chesscom_username'] = chesscomUsername;
+    }
+
+    return _apiClient.patch<UserProfile>(
+      '/users/me/profile',
+      data: data,
+      parse: (data) => UserProfile.fromJson(_asMap(data)),
     );
   }
 
@@ -132,5 +245,15 @@ class ContentRepository {
       return value.toInt();
     }
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  List<T> _list<T>(Object? value, T Function(Map<String, Object?> json) parse) {
+    if (value is! List) {
+      return const [];
+    }
+    return value
+        .whereType<Map>()
+        .map((item) => parse(Map<String, Object?>.from(item)))
+        .toList();
   }
 }

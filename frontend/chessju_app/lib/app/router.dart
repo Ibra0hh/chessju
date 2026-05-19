@@ -4,9 +4,11 @@ import 'package:chessju_app/features/auth/presentation/splash_screen.dart';
 import 'package:chessju_app/features/games/presentation/games_screen.dart';
 import 'package:chessju_app/features/home/presentation/home_screen.dart';
 import 'package:chessju_app/features/leaderboard/presentation/leaderboard_screen.dart';
+import 'package:chessju_app/features/news/presentation/news_detail_screen.dart';
 import 'package:chessju_app/features/news/presentation/news_list_screen.dart';
 import 'package:chessju_app/features/notifications/presentation/notifications_screen.dart';
 import 'package:chessju_app/features/profile/presentation/profile_screen.dart';
+import 'package:chessju_app/features/tournaments/presentation/tournament_detail_screen.dart';
 import 'package:chessju_app/features/tournaments/presentation/tournament_list_screen.dart';
 import 'package:chessju_app/shared/widgets/main_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,8 +36,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const NewsListScreen(),
           ),
           GoRoute(
+            path: '/news/:slug',
+            builder: (context, state) =>
+                NewsDetailScreen(slug: state.pathParameters['slug'] ?? ''),
+          ),
+          GoRoute(
             path: '/tournaments',
             builder: (context, state) => const TournamentListScreen(),
+          ),
+          GoRoute(
+            path: '/tournaments/:slug',
+            builder: (context, state) => TournamentDetailScreen(
+              slug: state.pathParameters['slug'] ?? '',
+            ),
           ),
           GoRoute(
             path: '/leaderboard',

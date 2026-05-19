@@ -241,6 +241,24 @@ client is intentionally simple and focused on connecting cleanly to the existing
 - Realtime SSE service placeholder for later UI integration
 - Flutter app documentation in `docs/FLUTTER_APP.md`
 
+### Phase 16: Flutter UI Vertical Slice
+
+- Responsive Flutter app shell with compact bottom navigation and wider-screen navigation rail
+- Auth UI polish for loading, validation, and backend error messages
+- Home screen connected to backend home data
+- News list and news detail screens connected to backend news endpoints
+- Tournament list and tournament detail screens connected to backend tournament endpoints
+- Tournament registration and cancellation actions from Flutter
+- Tournament rounds and standings shown on tournament detail
+- Leaderboard screen shows season context and ranking rows
+- Games screen lists current user's games
+- Notifications screen shows unread count, read state, mark-one-read, and mark-all-read actions
+- Profile screen shows user/profile/preference data and supports basic profile editing
+- Shared loading, error, empty, primary button, status chip, and content row widgets
+- Expanded Dart models for article detail, tournament detail, registration, rounds, standings,
+  leaderboard, games, notifications, and preferences
+- Flutter tests expanded for login validation, model parsing, shared states, and token storage
+
 ## Current Database State
 
 Current Alembic head:
@@ -323,6 +341,7 @@ Endpoint groups currently implemented:
 - Standard error responses with request IDs
 - Valkey health endpoint
 - Flutter app foundation routes and API client
+- Flutter vertical-slice screens consuming backend content/authenticated endpoints
 
 ## Current Worker And Queue State
 
@@ -351,6 +370,25 @@ Endpoint groups currently implemented:
   - `uuid`
 - Flutter analyze: passed at Phase 15 implementation time
 - Flutter test: passed at Phase 15 implementation time
+- Current vertical slice consumes:
+  - `/api/v1/home`
+  - `/api/v1/news`
+  - `/api/v1/news/{slug}`
+  - `/api/v1/tournaments`
+  - `/api/v1/tournaments/{slug}`
+  - `/api/v1/tournaments/{tournament_id}/register`
+  - `/api/v1/tournaments/{tournament_id}/registration`
+  - `/api/v1/tournaments/{slug}/rounds`
+  - `/api/v1/tournaments/{slug}/standings`
+  - `/api/v1/leaderboard`
+  - `/api/v1/leaderboard/seasons`
+  - `/api/v1/games`
+  - `/api/v1/notifications`
+  - `/api/v1/notifications/unread-count`
+  - `/api/v1/notifications/{notification_id}/read`
+  - `/api/v1/notifications/read-all`
+  - `/api/v1/users/me`
+  - `/api/v1/users/me/profile`
 
 ## Current Test And Quality Status
 
@@ -404,7 +442,7 @@ Latest known verification at this checkpoint:
 
 ## Not Implemented Yet
 
-- Full Flutter UI implementation beyond the app foundation
+- Full Flutter UI implementation beyond the current vertical slice
 - Automatic Swiss pairing
 - Automatic round-robin generation
 - Advanced tie-breaks
@@ -425,6 +463,11 @@ Latest known verification at this checkpoint:
 - Admin dashboard frontend
 - Deep-link routing for every detail page
 - Full SSE subscription UI
+- Game detail and analysis-board UI
+- PGN paste/upload UI
+- Chess.com import UI
+- Chess clock UI
+- Friends/direct chat UI
 
 ## Recommended Next Phase
 
@@ -432,6 +475,7 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- Continue Flutter UI implementation for home, tournaments, game library, analysis, clock, and chat.
+- Build the Flutter game detail and analysis-board UI.
+- Add PGN paste/upload UI after game detail is usable.
 - Build a dedicated Flutter admin dashboard when Ibrahim wants admin workflows outside OpenAPI.
 - Add automatic pairing if tournament operations should move beyond manual pairing.

@@ -3,6 +3,7 @@ import 'package:chessju_app/shared/widgets/async_value_view.dart';
 import 'package:chessju_app/shared/widgets/content_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class TournamentListScreen extends ConsumerWidget {
   const TournamentListScreen({super.key});
@@ -13,9 +14,10 @@ class TournamentListScreen extends ConsumerWidget {
 
     return AsyncValueView(
       value: tournaments,
+      onRetry: () => ref.invalidate(tournamentListProvider),
       data: (data) {
         if (data.items.isEmpty) {
-          return const EmptyState('No visible tournaments yet.');
+          return const EmptyView('No visible tournaments yet.');
         }
 
         return RefreshIndicator(
@@ -32,11 +34,11 @@ class TournamentListScreen extends ConsumerWidget {
                 ContentCard(
                   title: item.title,
                   subtitle:
-                      '${item.status} • ${item.startsAt}'
-                      '${item.location == null ? '' : ' • ${item.location}'}',
-                  trailing: item.spotsRemaining == null
-                      ? null
-                      : Text('${item.spotsRemaining} spots'),
+                      '${item.status} | ${item.startsAt}'
+                      '${item.location == null ? '' : ' | ${item.location}'}',
+                  leading: const Icon(Icons.emoji_events_outlined),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/tournaments/${item.slug}'),
                 ),
             ],
           ),

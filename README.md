@@ -150,6 +150,8 @@ Flutter app foundation:
 - iOS build, signing, TestFlight, and App Store release require macOS with Xcode.
 - The app base URL is configurable with `--dart-define=CHESSJU_API_BASE_URL=...`.
 - See `docs/FLUTTER_APP.md` for app structure, run commands, auth flow, and current screens.
+- The current Flutter vertical slice covers auth, home, news list/detail, tournaments list/detail
+  with registration actions, leaderboard, games list, notifications, and profile editing.
 
 Run Flutter checks:
 
@@ -183,11 +185,12 @@ standings, the global JU leaderboard, PGN paste/upload, normalized game moves, a
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
 Stockfish analysis jobs through the worker, Chess.com public game import, and chess clock sessions
 with append-only event logs, friends, blocking, direct conversations, direct text messages, admin
-chat moderation listing, in-app notifications, authenticated SSE events, and a Flutter app
-foundation with API client, auth flow, routing, theme, and basic backend-backed screens. Automatic
-pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media
-messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, and
-advanced game review behavior are intentionally delayed.
+chat moderation listing, in-app notifications, authenticated SSE events, and a Flutter vertical
+slice with API client, auth flow, responsive app shell, home/news/tournament/leaderboard/game/
+notification/profile screens, and basic backend-backed actions. Automatic pairing, advanced
+tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media messages, push
+notifications, full WebSocket chat, guaranteed distributed event delivery, and advanced game review
+behavior are intentionally delayed.
 
 ## Notes
 

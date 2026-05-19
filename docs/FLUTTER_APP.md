@@ -63,7 +63,7 @@ verification.
 
 ## Current App Foundation
 
-Implemented in Phase 15:
+Implemented in Phases 15-16:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
 - iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
@@ -78,7 +78,13 @@ Implemented in Phase 15:
 - Auth session controller
 - Login/register/logout flow foundation
 - Splash/session check screen
-- Home, news, tournaments, leaderboard, games placeholder, notifications, and profile screens
+- Responsive app shell with bottom navigation on compact screens and navigation rail on wider screens
+- Home, news, tournaments, leaderboard, games, notifications, and profile screens
+- News detail screen
+- Tournament detail screen with registration/cancellation actions
+- Tournament rounds and standings sections
+- Notification read/read-all actions
+- Profile edit dialog for full name, University ID, and Chess.com username
 
 ## Auth Flow
 
@@ -145,9 +151,11 @@ Current screens:
 - Register
 - Home
 - News list
+- News detail
 - Tournament list
+- Tournament detail
 - Leaderboard
-- Games placeholder
+- Games list
 - Notifications
 - Profile
 
@@ -158,11 +166,22 @@ The home screen consumes:
 Other screen endpoints:
 
 - News: `GET /api/v1/news`
+- News detail: `GET /api/v1/news/{slug}`
 - Tournaments: `GET /api/v1/tournaments`
+- Tournament detail: `GET /api/v1/tournaments/{slug}`
+- Tournament register: `POST /api/v1/tournaments/{tournament_id}/register`
+- Tournament cancel registration: `DELETE /api/v1/tournaments/{tournament_id}/registration`
+- Tournament rounds: `GET /api/v1/tournaments/{slug}/rounds`
+- Tournament standings: `GET /api/v1/tournaments/{slug}/standings`
 - Leaderboard: `GET /api/v1/leaderboard`
+- Seasons: `GET /api/v1/leaderboard/seasons`
+- Games: `GET /api/v1/games`
 - Notifications: `GET /api/v1/notifications`
 - Unread count: `GET /api/v1/notifications/unread-count`
+- Mark notification read: `POST /api/v1/notifications/{notification_id}/read`
+- Mark all notifications read: `POST /api/v1/notifications/read-all`
 - Profile: `GET /api/v1/users/me`
+- Profile update: `PATCH /api/v1/users/me/profile`
 
 ## Realtime / SSE
 
@@ -180,7 +199,7 @@ and refetch full REST state after important events.
 
 Still placeholder or future UI work:
 
-- Full game library UI
+- Game detail UI
 - PGN paste/upload UI
 - Analysis report UI
 - Chess.com import UI
@@ -188,3 +207,11 @@ Still placeholder or future UI work:
 - Friends/direct chat UI
 - SSE event consumption
 - Admin dashboard UI
+
+## Recommended Next Flutter Phase
+
+Recommended next UI phase:
+
+- Build the game detail and analysis-board UI using `games`, `game_moves`, and analysis report data.
+- Add PGN paste/upload forms once the game detail screen exists.
+- Add clock and chat UI after the core chess game review surface is usable.

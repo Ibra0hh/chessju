@@ -28,3 +28,11 @@ flutter build web
 ```
 
 See `../../docs/FLUTTER_APP.md` for the current app structure and integration notes.
+
+Current vertical slice:
+
+- Auth splash/login/register/logout
+- Home, news list/detail, tournaments list/detail, leaderboard, games list, notifications, profile
+- Tournament registration/cancellation
+- Notification read/read-all
+- Profile edit for full name, University ID, and Chess.com username

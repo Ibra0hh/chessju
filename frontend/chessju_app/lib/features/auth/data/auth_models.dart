@@ -46,6 +46,7 @@ class CurrentUser {
     required this.status,
     required this.roles,
     required this.profile,
+    required this.preferences,
   });
 
   final String id;
@@ -53,6 +54,7 @@ class CurrentUser {
   final String status;
   final List<String> roles;
   final UserProfile profile;
+  final UserPreferences preferences;
 
   factory CurrentUser.fromJson(Map<String, Object?> json) {
     return CurrentUser(
@@ -64,6 +66,9 @@ class CurrentUser {
           .toList(),
       profile: UserProfile.fromJson(
         Map<String, Object?>.from(json['profile'] as Map? ?? const {}),
+      ),
+      preferences: UserPreferences.fromJson(
+        Map<String, Object?>.from(json['preferences'] as Map? ?? const {}),
       ),
     );
   }
@@ -100,6 +105,35 @@ class UserProfile {
       avatarFileId: json['avatar_file_id']?.toString(),
       bio: json['bio']?.toString(),
       chesscomUsername: json['chesscom_username']?.toString(),
+    );
+  }
+}
+
+class UserPreferences {
+  const UserPreferences({
+    required this.userId,
+    required this.appTheme,
+    required this.boardTheme,
+    required this.accentColor,
+    required this.clockSoundEnabled,
+    required this.language,
+  });
+
+  final String userId;
+  final String appTheme;
+  final String boardTheme;
+  final String accentColor;
+  final bool clockSoundEnabled;
+  final String language;
+
+  factory UserPreferences.fromJson(Map<String, Object?> json) {
+    return UserPreferences(
+      userId: json['user_id']?.toString() ?? '',
+      appTheme: json['app_theme']?.toString() ?? 'system',
+      boardTheme: json['board_theme']?.toString() ?? 'classic',
+      accentColor: json['accent_color']?.toString() ?? 'blue',
+      clockSoundEnabled: json['clock_sound_enabled'] != false,
+      language: json['language']?.toString() ?? 'en',
     );
   }
 }
