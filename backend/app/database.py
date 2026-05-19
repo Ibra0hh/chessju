@@ -1,3 +1,5 @@
+import asyncio
+import sys
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import text
@@ -5,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 
 from app.config import get_settings
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 settings = get_settings()
 

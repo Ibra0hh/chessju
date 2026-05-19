@@ -9,7 +9,10 @@ description = "ChessJU FastAPI backend"
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "alembic>=1.14,<2",
+    "argon2-cffi>=25.1,<26",
+    "email-validator>=2.2,<3",
     "fastapi>=0.115,<1",
+    "PyJWT>=2.10,<3",
     "pydantic-settings>=2.7,<3",
     "psycopg[binary]>=3.2,<4",
     "redis>=5,<7",
@@ -39,3 +42,4 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]

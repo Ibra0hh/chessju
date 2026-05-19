@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     valkey_url: str = "redis://valkey:6379/0"
     local_storage_root: str = "/data/storage"
 
-    jwt_secret_key: str = "change-me-in-local-development"
+    jwt_secret_key: str = "change-me-in-local-development-secret-32-plus"
+    jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30
 
