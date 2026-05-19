@@ -63,7 +63,7 @@ verification.
 
 ## Current App Foundation
 
-Implemented in Phases 15-19:
+Implemented in Phases 15-20:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
 - iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
@@ -103,6 +103,10 @@ Implemented in Phases 15-19:
 - Blocked users screen with unblock action
 - Conversations list screen
 - Direct message thread screen with text send, read marking, refresh, and soft-delete for own messages
+- Admin dashboard route at `/admin` with admin/super_admin role visibility
+- Admin screens for news, announcements, time controls, tournaments, leaderboard, audit logs, and
+  read-only operational lists
+- Tournament manager UI for registrations, rounds, manual pairings, result submission, and standings
 
 ## Auth Flow
 
@@ -182,6 +186,14 @@ Current screens:
 - Blocked users
 - Conversations
 - Conversation detail
+- Admin dashboard
+- Admin news
+- Admin announcements
+- Admin time controls
+- Admin tournaments
+- Admin tournament manager
+- Admin leaderboard
+- Admin audit logs
 - Notifications
 - Profile
 
@@ -236,6 +248,26 @@ Other screen endpoints:
 - Send message: `POST /api/v1/conversations/{conversation_id}/messages`
 - Mark conversation read: `POST /api/v1/conversations/{conversation_id}/read`
 - Delete own message: `DELETE /api/v1/messages/{message_id}`
+- Admin identity: `GET /api/v1/admin/me`
+- Admin news: `GET /api/v1/admin/news`
+- Create admin news: `POST /api/v1/admin/news`
+- Update admin news: `PATCH /api/v1/admin/news/{article_id}`
+- Publish/archive/delete admin news:
+  `POST /api/v1/admin/news/{article_id}/publish`,
+  `POST /api/v1/admin/news/{article_id}/archive`,
+  `DELETE /api/v1/admin/news/{article_id}`
+- Admin announcements: `GET /api/v1/admin/announcements`
+- Create/update/publish/archive/delete admin announcements under `/api/v1/admin/announcements`
+- Admin time controls: `GET/POST/PATCH /api/v1/admin/time-controls`
+- Admin tournaments and lifecycle actions under `/api/v1/admin/tournaments`
+- Admin tournament registrations:
+  `GET /api/v1/admin/tournaments/{tournament_id}/registrations`
+  and `PATCH /api/v1/admin/tournament-registrations/{registration_id}`
+- Admin rounds, pairings, results, and standings under `/api/v1/admin/rounds`,
+  `/api/v1/admin/pairings`, and `/api/v1/admin/tournaments/{tournament_id}/standings`
+- Admin leaderboard seasons/recompute: `/api/v1/admin/leaderboard`
+- Admin audit logs: `GET /api/v1/admin/audit-logs`
+- Admin read-only lists: games, analysis jobs, Chess.com sync jobs, and notifications
 - Notifications: `GET /api/v1/notifications`
 - Unread count: `GET /api/v1/notifications/unread-count`
 - Mark notification read: `POST /api/v1/notifications/{notification_id}/read`
@@ -296,6 +328,21 @@ Friends and direct chat behavior:
 - Users can soft-delete their own messages; deleted messages render as a sanitized deleted state.
 - SSE refetch integration is not wired in Phase 19; REST refresh remains authoritative.
 
+Admin dashboard behavior:
+
+- Admin entry is shown only when the authenticated `CurrentUser.roles` contains `admin` or
+  `super_admin`.
+- Admin routes still call `GET /api/v1/admin/me` so the backend remains the authority.
+- Non-admin users who navigate manually to `/admin` see a forbidden state.
+- The admin dashboard uses a sidebar on wide layouts and a section picker on compact layouts.
+- Content management supports create/edit/publish/archive/delete for news and announcements.
+- Tournament management supports create/edit/lifecycle actions, registration status updates, round
+  creation/status actions, manual pairing creation, result submission, and standings viewing.
+- Player and user selection uses ID inputs where the backend does not yet expose search/picker
+  endpoints.
+- Operational admin lists for games, analysis jobs, Chess.com sync jobs, and notifications are
+  read-only.
+
 Still placeholder or future UI work:
 
 - PGN file upload UI
@@ -306,7 +353,9 @@ Still placeholder or future UI work:
 - Tournament chat UI
 - Media messages
 - SSE event consumption
-- Admin dashboard UI
+- Rich markdown editor for admin news
+- User search/player picker for admin forms
+- Drag/drop pairing tools
 - Draggable board input
 - Engine arrows
 - Evaluation graph
@@ -317,6 +366,6 @@ Still placeholder or future UI work:
 
 Recommended next UI phase:
 
-- Add Chess.com import UI, PGN file upload UI, or SSE-driven social refresh after Ibrahim chooses
-  the next product slice.
+- Add Chess.com import UI, PGN file upload UI, admin UI polish, or SSE-driven social refresh after
+  Ibrahim chooses the next product slice.
 - Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.

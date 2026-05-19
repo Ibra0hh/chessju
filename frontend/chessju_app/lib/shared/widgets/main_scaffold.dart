@@ -1,3 +1,4 @@
+import 'package:chessju_app/features/admin/data/admin_models.dart';
 import 'package:chessju_app/features/auth/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,7 @@ class MainScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
     final username = authState.user?.profile.username;
+    final isAdmin = authState.user?.isAdmin == true;
     final currentPath = GoRouterState.of(context).uri.path;
     final selectedIndex = _selectedIndexFor(currentPath);
 
@@ -59,6 +61,12 @@ class MainScaffold extends ConsumerWidget {
               onPressed: () => context.go('/friends'),
               icon: const Icon(Icons.people_outline),
             ),
+            if (isAdmin)
+              IconButton(
+                tooltip: 'Admin',
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.admin_panel_settings_outlined),
+              ),
             if (username != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),

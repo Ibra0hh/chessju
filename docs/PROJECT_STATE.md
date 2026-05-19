@@ -318,6 +318,31 @@ client is intentionally simple and focused on connecting cleanly to the existing
 - User search, group chat, tournament chat, media messages, push notifications, and SSE-driven chat
   refresh are intentionally delayed
 
+### Phase 20: Flutter Admin Dashboard And Tournament Manager UI
+
+- Admin dashboard route available at `/admin`
+- Admin entry is visible only to users with `admin` or `super_admin` roles
+- Admin routes verify access with `/api/v1/admin/me`
+- Non-admin users see a forbidden state on manual admin navigation
+- Admin dashboard uses wide sidebar navigation and compact section picker navigation
+- Admin news screen supports create, edit, publish, archive, and delete
+- Admin announcements screen supports create, edit, publish, archive, and delete
+- Admin time controls screen supports list, create, and edit
+- Admin tournaments screen supports create and list
+- Admin tournament detail supports edit, publish, open registration, close registration, cancel, and
+  soft delete
+- Tournament registration management supports status updates
+- Rounds panel supports create and status actions
+- Pairings panel supports manual pairing creation, pairing cancellation, and result submission
+- Tournament standings are visible from the admin tournament detail
+- Admin leaderboard screen supports season creation, activation, recompute, and row viewing
+- Admin audit logs screen shows recent admin mutation logs
+- Optional read-only admin list panels show games, analysis jobs, Chess.com sync jobs, and
+  notifications
+- Admin forms use raw user/player IDs where search or picker endpoints do not exist yet
+- Rich markdown editor, drag/drop pairings, automatic pairing, and production admin polish are
+  intentionally delayed
+
 ## Current Database State
 
 Current Alembic head:
@@ -404,6 +429,7 @@ Endpoint groups currently implemented:
 - Flutter game library, PGN paste, game detail, board replay, and analysis report UI
 - Flutter chess clock UI for casual clock sessions and backend event history
 - Flutter friends, blocks, conversations, and direct text message UI
+- Flutter admin dashboard, tournament manager, leaderboard recompute, and audit log UI
 
 ## Current Worker And Queue State
 
@@ -481,6 +507,26 @@ Endpoint groups currently implemented:
   - `/api/v1/notifications/read-all`
   - `/api/v1/users/me`
   - `/api/v1/users/me/profile`
+  - `/api/v1/admin/me`
+  - `/api/v1/admin/news`
+  - `/api/v1/admin/news/{article_id}`
+  - `/api/v1/admin/news/{article_id}/publish`
+  - `/api/v1/admin/news/{article_id}/archive`
+  - `/api/v1/admin/announcements`
+  - `/api/v1/admin/announcements/{announcement_id}`
+  - `/api/v1/admin/time-controls`
+  - `/api/v1/admin/tournaments`
+  - `/api/v1/admin/tournaments/{tournament_id}`
+  - `/api/v1/admin/tournaments/{tournament_id}/registrations`
+  - `/api/v1/admin/tournament-registrations/{registration_id}`
+  - `/api/v1/admin/tournaments/{tournament_id}/rounds`
+  - `/api/v1/admin/rounds/{round_id}/pairings`
+  - `/api/v1/admin/pairings/{pairing_id}/result`
+  - `/api/v1/admin/tournaments/{tournament_id}/standings`
+  - `/api/v1/admin/leaderboard`
+  - `/api/v1/admin/leaderboard/seasons`
+  - `/api/v1/admin/leaderboard/recompute`
+  - `/api/v1/admin/audit-logs`
 
 ## Current Test And Quality Status
 
@@ -490,7 +536,7 @@ Latest known verification at this checkpoint:
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Flutter analyze: passed
-- Flutter test: `24 passed`
+- Flutter test: `30 passed`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -501,9 +547,9 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 16 commit before Phase 17:
-  `922c48f5202b9c05a828c9069a5c8786e802bd32`
-- Git status before Phase 17 implementation: clean
+- Latest completed Phase 19 commit before Phase 20:
+  `5613fea5618a865f5b53a44ef483c2a8f186f98c`
+- Git status before Phase 20 implementation: clean
 
 ## Important Permanent Rules
 
@@ -558,7 +604,9 @@ Latest known verification at this checkpoint:
 - End-to-end encrypted direct messages
 - Flutter user search/discovery for friend requests
 - Flutter SSE-driven chat refresh
-- Admin dashboard frontend
+- Admin rich markdown editor
+- Admin user search/player picker
+- Admin drag/drop pairing UI
 - Deep-link routing for every detail page
 - Full SSE subscription UI
 - PGN file upload UI
@@ -573,8 +621,7 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- Add Chess.com import UI, PGN file upload UI, or SSE-driven social refresh after Ibrahim chooses
-  the next product slice.
+- Add Chess.com import UI, PGN file upload UI, admin UI polish, or SSE-driven social refresh after
+  Ibrahim chooses the next product slice.
 - Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.
-- Build a dedicated Flutter admin dashboard when Ibrahim wants admin workflows outside OpenAPI.
 - Add automatic pairing if tournament operations should move beyond manual pairing.

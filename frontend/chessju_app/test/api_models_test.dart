@@ -1,6 +1,7 @@
 import 'package:chessju_app/core/errors/api_error.dart';
 import 'package:chessju_app/core/pagination/pagination.dart';
 import 'package:chessju_app/core/storage/token_storage.dart';
+import 'package:chessju_app/features/admin/data/admin_models.dart';
 import 'package:chessju_app/features/auth/data/auth_models.dart';
 import 'package:chessju_app/features/clock/data/clock_models.dart';
 import 'package:chessju_app/features/games/data/game_models.dart';
@@ -335,6 +336,61 @@ void main() {
       expect(validateMessageBody('Hello'), isNull);
     },
   );
+
+  test('Admin role guard helper allows admins and rejects members', () {
+    expect(hasAdminAccessForRoles(['member', 'admin']), isTrue);
+    expect(hasAdminAccessForRoles(['super_admin']), isTrue);
+    expect(hasAdminAccessForRoles(['member']), isFalse);
+  });
+
+  test('Time control model parses sample JSON', () {
+    final control = AdminTimeControl.fromJson({
+      'id': 'tc1',
+      'name': '5+3 Blitz',
+      'base_seconds': 300,
+      'increment_seconds': 3,
+      'delay_seconds': 0,
+      'type': 'blitz',
+      'created_at': '2026-05-19T12:00:00Z',
+      'updated_at': '2026-05-19T12:00:00Z',
+    });
+
+    expect(control.name, '5+3 Blitz');
+    expect(control.baseSeconds, 300);
+    expect(control.type, 'blitz');
+  });
+
+  test('Audit log model parses sample JSON', () {
+    final log = AdminAuditLog.fromJson({
+      'id': 'log1',
+      'admin_id': 'admin1',
+      'action': 'tournament.created',
+      'entity_type': 'tournament',
+      'entity_id': 't1',
+      'before': null,
+      'after': {'status': 'draft'},
+      'ip_address': '127.0.0.1',
+      'user_agent': 'test',
+      'created_at': '2026-05-19T12:00:00Z',
+    });
+
+    expect(log.action, 'tournament.created');
+    expect(log.after?['status'], 'draft');
+    expect(log.entityType, 'tournament');
+  });
+
+  test('Result dropdown helper maps values cleanly', () {
+    expect(resultLabelFor('white_win'), 'White win');
+    expect(resultLabelFor('double_forfeit'), 'Double forfeit');
+    expect(resultLabelFor('pending'), 'Pending');
+  });
+
+  test('Admin form validation helpers catch missing fields', () {
+    expect(validateRequiredText('', 'Title'), 'Title is required');
+    expect(validateRequiredText('ChessJU', 'Title'), isNull);
+    expect(validatePositiveIntegerText('0', 'Base seconds'), isNotNull);
+    expect(validatePositiveIntegerText('300', 'Base seconds'), isNull);
+  });
 
   test('GameDetail parses backend game detail response', () {
     final game = GameDetail.fromJson({

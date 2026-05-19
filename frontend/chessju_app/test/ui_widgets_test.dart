@@ -1,4 +1,6 @@
 import 'package:chessju_app/core/storage/token_storage.dart';
+import 'package:chessju_app/features/admin/data/admin_models.dart';
+import 'package:chessju_app/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:chessju_app/features/auth/presentation/login_screen.dart';
 import 'package:chessju_app/features/clock/data/clock_models.dart';
 import 'package:chessju_app/features/clock/presentation/clock_screen.dart';
@@ -121,5 +123,30 @@ void main() {
     expect(find.text('running'), findsOneWidget);
     expect(find.text('white to move'), findsOneWidget);
     expect(find.text('5:00'), findsWidgets);
+  });
+
+  testWidgets('Admin dashboard overview renders sections', (tester) async {
+    const admin = AdminIdentity(
+      id: 'a1',
+      email: 'admin@example.com',
+      roles: ['admin'],
+      username: 'admin_user',
+      fullName: 'Admin User',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: AdminOverviewContent(admin: admin, onOpen: (_) {}),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Admin Dashboard'), findsOneWidget);
+    expect(find.text('News'), findsOneWidget);
+    expect(find.text('Tournaments'), findsOneWidget);
+    expect(find.text('Audit Logs'), findsOneWidget);
   });
 }

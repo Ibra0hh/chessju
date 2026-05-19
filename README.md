@@ -152,8 +152,8 @@ Flutter app foundation:
 - See `docs/FLUTTER_APP.md` for app structure, run commands, auth flow, and current screens.
 - The current Flutter vertical slice covers auth, home, news list/detail, tournaments list/detail
   with registration actions, leaderboard, games list/detail, PGN paste import, analysis
-  request/report viewing, chess clock UI, friends/direct chat UI, notifications, and profile
-  editing.
+  request/report viewing, chess clock UI, friends/direct chat UI, admin dashboard/tournament
+  manager UI, notifications, and profile editing.
 
 Run Flutter checks:
 
@@ -194,8 +194,9 @@ casual chess clock UI that stores meaningful backend events without sending ever
 friends/direct chat screens for requests, blocks, conversations, and text messages. Automatic
 pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media
 messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, PGN file
-upload UI, user search/discovery UI, SSE-driven chat refresh, engine arrows, evaluation graph
-behavior, and dedicated official tournament clock UI are intentionally delayed.
+upload UI, user search/discovery UI, admin player picker/search, drag/drop pairing UI,
+SSE-driven chat refresh, engine arrows, evaluation graph behavior, and dedicated official
+tournament clock UI are intentionally delayed.
 
 ## Notes
 

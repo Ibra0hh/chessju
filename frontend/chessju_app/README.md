@@ -42,6 +42,8 @@ Current vertical slice:
 - Stockfish analysis request/status/report display
 - Chess clock screen with casual setup, local countdown, backend event snapshots, and event history
 - Friends screen, friend requests, block management, conversations, and direct text messages
+- Admin dashboard foundation with content management, tournament manager, leaderboard recompute,
+  audit logs, and read-only operational lists
 
 Current game-review limitations:
 
@@ -62,3 +64,11 @@ Current social/chat limitations:
 - Direct chat is text-only.
 - Group chat, tournament chat, media messages, and push notifications are not implemented.
 - SSE-driven chat refresh is not wired yet; screens use REST refreshes as the source of truth.
+
+Current admin limitations:
+
+- Admin user and player selection uses raw IDs until search/picker endpoints exist.
+- News editing uses a plain text markdown field, not a rich editor.
+- Pairing creation is manual; there is no drag/drop pairing board or automatic Swiss pairing.
+- Operational games, analysis, Chess.com sync, and notifications admin panels are read-only.
+- iOS builds are not run from Windows.

@@ -1,6 +1,7 @@
 import 'package:chessju_app/features/auth/presentation/login_screen.dart';
 import 'package:chessju_app/features/auth/presentation/register_screen.dart';
 import 'package:chessju_app/features/auth/presentation/splash_screen.dart';
+import 'package:chessju_app/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:chessju_app/features/clock/presentation/clock_screen.dart';
 import 'package:chessju_app/features/games/presentation/game_detail_screen.dart';
 import 'package:chessju_app/features/games/presentation/games_screen.dart';
@@ -65,6 +66,51 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/clock',
             builder: (context, state) => const ClockScreen(),
+          ),
+          GoRoute(
+            path: '/admin',
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/admin/news',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.news),
+          ),
+          GoRoute(
+            path: '/admin/announcements',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.announcements),
+          ),
+          GoRoute(
+            path: '/admin/time-controls',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.timeControls),
+          ),
+          GoRoute(
+            path: '/admin/tournaments',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.tournaments),
+          ),
+          GoRoute(
+            path: '/admin/tournaments/:tournamentId',
+            builder: (context, state) => AdminTournamentDetailScreen(
+              tournamentId: state.pathParameters['tournamentId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: '/admin/leaderboard',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.leaderboard),
+          ),
+          GoRoute(
+            path: '/admin/audit-logs',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.auditLogs),
+          ),
+          GoRoute(
+            path: '/admin/lists',
+            builder: (context, state) =>
+                const AdminDashboardScreen(section: AdminSection.observability),
           ),
           GoRoute(
             path: '/friends',
