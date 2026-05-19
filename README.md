@@ -37,13 +37,13 @@ docker compose -f infra/docker-compose.dev.yml up --build
 API:
 
 ```text
-http://localhost:8000
+http://localhost:8001
 ```
 
 OpenAPI:
 
 ```text
-http://localhost:8000/docs
+http://localhost:8001/docs
 ```
 
 ## Useful Commands
@@ -81,6 +81,12 @@ alembic upgrade head
 - `GET /health`
 - `GET /version`
 - `GET /health/db`
+
+Local URLs:
+
+- `http://localhost:8001/health`
+- `http://localhost:8001/version`
+- `http://localhost:8001/health/db`
 
 ## Notes
 

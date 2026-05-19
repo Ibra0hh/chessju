@@ -21,6 +21,14 @@ Start local services:
 docker compose -f infra/docker-compose.dev.yml up --build
 ```
 
+Phase 1 endpoint checks:
+
+```powershell
+Invoke-RestMethod http://localhost:8001/health
+Invoke-RestMethod http://localhost:8001/version
+Invoke-RestMethod http://localhost:8001/health/db
+```
+
 Run backend tests:
 
 ```powershell

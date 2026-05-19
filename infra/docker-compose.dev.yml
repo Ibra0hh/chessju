@@ -10,7 +10,7 @@ services:
       CHESSJU_VALKEY_URL: redis://valkey:6379/0
       CHESSJU_LOCAL_STORAGE_ROOT: /data/storage
     ports:
-      - "8000:8000"
+      - "${API_HOST_PORT:-8001}:8000"
     volumes:
       - ../backend:/app
       - chessju_storage:/data/storage
