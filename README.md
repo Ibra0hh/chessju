@@ -146,6 +146,8 @@ Flutter app foundation:
 - The Flutter app lives in `frontend/chessju_app`.
 - Web/Desktop local backend URL: `http://localhost:8001`
 - Android emulator local backend URL: `http://10.0.2.2:8001`
+- iOS simulator on macOS can use `http://localhost:8001`.
+- iOS build, signing, TestFlight, and App Store release require macOS with Xcode.
 - The app base URL is configurable with `--dart-define=CHESSJU_API_BASE_URL=...`.
 - See `docs/FLUTTER_APP.md` for app structure, run commands, auth flow, and current screens.
 

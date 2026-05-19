@@ -15,6 +15,10 @@ Android emulator uses the host alias:
 flutter run -d emulator --dart-define=CHESSJU_API_BASE_URL=http://10.0.2.2:8001
 ```
 
+iOS simulator on macOS can use `http://localhost:8001`. The iOS project files are included, but
+iOS build, signing, TestFlight, and App Store release require macOS with Xcode and are not run from
+Windows.
+
 Checks:
 
 ```powershell

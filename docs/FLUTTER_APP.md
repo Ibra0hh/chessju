@@ -21,11 +21,19 @@ Defaults:
 
 - Web/Desktop: `http://localhost:8001`
 - Android emulator: `http://10.0.2.2:8001`
+- iOS simulator on macOS: `http://localhost:8001`
+- Physical devices: use the computer LAN IP, for example `http://192.168.1.25:8001`
 
 Android example:
 
 ```powershell
 flutter run -d emulator --dart-define=CHESSJU_API_BASE_URL=http://10.0.2.2:8001
+```
+
+iOS simulator example on macOS:
+
+```zsh
+flutter run -d ios --dart-define=CHESSJU_API_BASE_URL=http://localhost:8001
 ```
 
 ## Run The App
@@ -47,11 +55,18 @@ flutter test
 flutter build web
 ```
 
+The `ios/` folder is included in the project scaffold. iOS builds, signing, TestFlight, and App
+Store release require macOS with Xcode. Do not try to build or sign iOS from Windows. Windows
+development can still cover most app logic, API integration, routing, state management, tests, web
+builds, and Windows desktop builds. Use a Mac or macOS CI when ChessJU is ready for iOS release
+verification.
+
 ## Current App Foundation
 
 Implemented in Phase 15:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
+- iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
 - Material 3 light/dark ChessJU theme
 - `go_router` routing
 - `flutter_riverpod` state management

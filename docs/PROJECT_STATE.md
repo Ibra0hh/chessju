@@ -214,6 +214,7 @@ client is intentionally simple and focused on connecting cleanly to the existing
 
 - Flutter project under `frontend/chessju_app`
 - Android, iOS, Web, and Windows desktop project scaffold
+- iOS folder included; iOS build, signing, TestFlight, and App Store release require macOS with Xcode
 - Configurable backend base URL
 - API client with bearer token and request ID support
 - Standard backend error envelope parsing
@@ -338,6 +339,9 @@ Endpoint groups currently implemented:
 - Flutter project path: `frontend/chessju_app`
 - Backend base URL default: `http://localhost:8001`
 - Android emulator backend URL: `http://10.0.2.2:8001`
+- iOS simulator backend URL on macOS: `http://localhost:8001`
+- Physical device backend URL: use the computer LAN IP
+- iOS release path: verify/build/sign on macOS with Xcode or macOS CI
 - Main packages:
   - `go_router`
   - `dio`
