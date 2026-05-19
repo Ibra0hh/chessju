@@ -636,8 +636,8 @@ def test_home_excludes_draft_cancelled_completed_and_deleted_tournaments() -> No
     assert deleted["slug"] not in slugs
 
 
-def test_home_keeps_leaderboard_preview_empty() -> None:
+def test_home_keeps_leaderboard_preview_as_list() -> None:
     response = client.get("/api/v1/home")
 
     assert response.status_code == 200
-    assert response.json()["leaderboard_preview"] == []
+    assert isinstance(response.json()["leaderboard_preview"], list)

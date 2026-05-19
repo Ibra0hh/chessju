@@ -69,4 +69,29 @@ or updates one linked `games` row per pairing. PGN uploads and imported games wi
 later.
 
 Basic tournament standings are computed live from completed pairings and approved registrations.
-Tie-break tables and global JU leaderboard snapshots are intentionally delayed.
+Tie-break tables are intentionally delayed.
+
+Phase 7 JU leaderboard tables:
+
+- `seasons`
+- `player_ratings`
+- `rating_events`
+- `leaderboard_snapshots`
+
+`seasons` defines named ranking windows. Only one season should be active at a time; this is enforced
+by service logic and a PostgreSQL partial unique index for `active = true`.
+
+`player_ratings` stores per-user rating rows. Phase 7 uses `internal` ratings when present and
+defaults leaderboard rows to 1200 when no rating row exists. Elo-style updates are not implemented
+yet.
+
+`rating_events` is reserved for future rating history. Phase 7 creates the table but does not write
+rating events.
+
+`leaderboard_snapshots` stores generated leaderboard rows for all-time rankings (`season_id` null)
+or a specific season. Recompute deletes the previous snapshots for that scope and inserts fresh rows
+with a shared `generated_at` timestamp.
+
+Phase 7 leaderboard scoring uses completed tournament games/results from non-deleted,
+non-cancelled tournaments and approved tournament registrations. Ranking sorts by points, wins,
+draws, games played, then username.

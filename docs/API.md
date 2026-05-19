@@ -106,3 +106,22 @@ Phase 6 tournament playing-flow endpoints:
 
 Round drafts are admin-only. Public users see published, in-progress, completed, and cancelled
 rounds. Pairings are manual in this phase. Standings are computed live from completed pairings.
+
+Phase 7 JU leaderboard endpoints:
+
+- `GET /api/v1/leaderboard`
+- `GET /api/v1/leaderboard/seasons`
+- `GET /api/v1/leaderboard/seasons/{season_id}`
+- `POST /api/v1/admin/leaderboard/seasons`
+- `GET /api/v1/admin/leaderboard/seasons`
+- `PATCH /api/v1/admin/leaderboard/seasons/{season_id}`
+- `POST /api/v1/admin/leaderboard/seasons/{season_id}/activate`
+- `POST /api/v1/admin/leaderboard/recompute`
+- `GET /api/v1/admin/leaderboard`
+
+The public leaderboard reads from generated snapshots. `GET /api/v1/leaderboard` returns the active
+season leaderboard when an active season exists, otherwise it returns all-time snapshots. Admins can
+recompute all-time snapshots with `season_id: null` or recompute a specific season by ID.
+
+The home endpoint now fills `leaderboard_preview` from the top five public leaderboard snapshot rows.
+If no matching snapshot exists, the preview is an empty list.

@@ -541,6 +541,7 @@ async def soft_delete_announcement(
 
 
 async def get_home_content(session: AsyncSession) -> HomeResponse:
+    from app.leaderboard.services import get_home_leaderboard_preview
     from app.tournaments.services import list_home_upcoming_tournaments
 
     announcements = await list_public_announcements(session, limit=5, offset=0)
@@ -549,5 +550,5 @@ async def get_home_content(session: AsyncSession) -> HomeResponse:
         announcements=announcements.items,
         latest_news=latest_news.items,
         upcoming_tournaments=await list_home_upcoming_tournaments(session, limit=5),
-        leaderboard_preview=[],
+        leaderboard_preview=await get_home_leaderboard_preview(session, limit=5),
     )

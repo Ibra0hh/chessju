@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.database import Base
 from app.files import models as files_models  # noqa: F401
 from app.games import models as games_models  # noqa: F401
+from app.leaderboard import models as leaderboard_models  # noqa: F401
 from app.news import models as news_models  # noqa: F401
 from app.tournaments import models as tournaments_models  # noqa: F401
 from app.users import models as users_models  # noqa: F401

@@ -61,3 +61,19 @@ Phase 6 scoring:
 - `black_forfeit`: white +1
 - `double_forfeit`: both +0
 - `bye`: player +1
+
+Phase 7 JU leaderboard security rules:
+
+- Season management and leaderboard recompute require `admin` or `super_admin`
+- Public leaderboard endpoints read generated snapshots only
+- Recompute uses completed tournament game records and approved tournament registrations
+- Activating a season deactivates all other seasons in the same transaction
+- Season and recompute admin mutations write audit log entries
+- Leaderboard does not expose private auth fields, token data, or internal audit payloads
+
+Not implemented yet:
+
+- Elo updates
+- Buchholz
+- Sonneborn-Berger
+- advanced tie-breaks

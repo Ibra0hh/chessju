@@ -102,8 +102,9 @@ Local URLs:
 Implemented backend foundations now include auth/users, admin audit logs, files, news,
 announcements, home content, time controls, tournaments, tournament registration MVP behavior,
 manual rounds, manual pairings, result entry, linked tournament game records, and basic tournament
-standings. Global JU leaderboard, PGN, Stockfish, Chess.com sync, chat, and frontend code are
-intentionally delayed.
+standings. The global JU leaderboard foundation now supports seasons, admin recompute, public
+snapshot reads, and home leaderboard preview data. PGN, Stockfish, Chess.com sync, chat, and
+frontend code are intentionally delayed.
 
 ## Notes
 

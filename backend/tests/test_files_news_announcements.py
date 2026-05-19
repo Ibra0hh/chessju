@@ -419,7 +419,7 @@ def test_home_returns_stable_response_shape() -> None:
     assert isinstance(body["announcements"], list)
     assert isinstance(body["latest_news"], list)
     assert isinstance(body["upcoming_tournaments"], list)
-    assert body["leaderboard_preview"] == []
+    assert isinstance(body["leaderboard_preview"], list)
 
 
 def test_home_includes_latest_published_news() -> None:
