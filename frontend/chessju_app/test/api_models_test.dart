@@ -4,6 +4,7 @@ import 'package:chessju_app/core/storage/token_storage.dart';
 import 'package:chessju_app/features/auth/data/auth_models.dart';
 import 'package:chessju_app/features/clock/data/clock_models.dart';
 import 'package:chessju_app/features/games/data/game_models.dart';
+import 'package:chessju_app/features/social/data/social_models.dart';
 import 'package:chessju_app/shared/models/content_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -221,6 +222,119 @@ void main() {
     expect(validateIncrementSeconds(-1), isNotNull);
     expect(validateIncrementSeconds(0), isNull);
   });
+
+  test('FriendRequest model parses sample JSON', () {
+    final request = FriendRequest.fromJson({
+      'id': 'fr1',
+      'sender': {
+        'id': 'u1',
+        'username': 'white_player',
+        'full_name': 'White Player',
+      },
+      'receiver': {
+        'id': 'u2',
+        'username': 'black_player',
+        'full_name': 'Black Player',
+      },
+      'status': 'pending',
+      'created_at': '2026-05-19T12:00:00Z',
+      'responded_at': null,
+    });
+
+    expect(request.sender.username, 'white_player');
+    expect(request.receiver.fullName, 'Black Player');
+    expect(request.status, 'pending');
+  });
+
+  test('Friend model parses sample JSON', () {
+    final friend = FriendUser.fromJson({
+      'id': 'u2',
+      'username': 'black_player',
+      'full_name': 'Black Player',
+      'avatar_file_id': null,
+      'friendship_id': 'f1',
+      'created_at': '2026-05-19T12:00:00Z',
+    });
+
+    expect(friend.id, 'u2');
+    expect(friend.friendshipId, 'f1');
+    expect(friend.displayName, 'Black Player');
+  });
+
+  test('Conversation model parses sample JSON', () {
+    final conversation = Conversation.fromJson({
+      'id': 'c1',
+      'type': 'direct',
+      'members': [
+        {
+          'user': {
+            'id': 'u1',
+            'username': 'white_player',
+            'full_name': 'White Player',
+          },
+          'role': 'member',
+          'joined_at': '2026-05-19T12:00:00Z',
+          'left_at': null,
+        },
+        {
+          'user': {
+            'id': 'u2',
+            'username': 'black_player',
+            'full_name': 'Black Player',
+          },
+          'role': 'member',
+          'joined_at': '2026-05-19T12:00:00Z',
+          'left_at': null,
+        },
+      ],
+      'last_message': {
+        'id': 'm1',
+        'conversation_id': 'c1',
+        'sender': {
+          'id': 'u2',
+          'username': 'black_player',
+          'full_name': 'Black Player',
+        },
+        'body': 'Ready for blitz?',
+        'message_type': 'text',
+        'created_at': '2026-05-19T12:01:00Z',
+        'edited_at': null,
+        'deleted_at': null,
+      },
+      'created_at': '2026-05-19T12:00:00Z',
+      'updated_at': '2026-05-19T12:01:00Z',
+    });
+
+    expect(conversation.members.length, 2);
+    expect(conversation.otherMember('u1')?.username, 'black_player');
+    expect(conversation.lastMessage?.body, 'Ready for blitz?');
+  });
+
+  test(
+    'Message model parses sample JSON and validation rejects empty text',
+    () {
+      final message = Message.fromJson({
+        'id': 'm1',
+        'conversation_id': 'c1',
+        'sender': {
+          'id': 'u1',
+          'username': 'white_player',
+          'full_name': 'White Player',
+        },
+        'body': 'Good game',
+        'message_type': 'text',
+        'created_at': '2026-05-19T12:00:00Z',
+        'edited_at': null,
+        'deleted_at': null,
+      });
+
+      expect(message.body, 'Good game');
+      expect(message.isDeleted, isFalse);
+      expect(validateMessageBody(''), isNotNull);
+      expect(validateMessageBody('   '), isNotNull);
+      expect(validateMessageBody('Hello'), isNull);
+    },
+  );
 
   test('GameDetail parses backend game detail response', () {
     final game = GameDetail.fromJson({

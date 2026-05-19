@@ -11,6 +11,11 @@ import 'package:chessju_app/features/news/presentation/news_detail_screen.dart';
 import 'package:chessju_app/features/news/presentation/news_list_screen.dart';
 import 'package:chessju_app/features/notifications/presentation/notifications_screen.dart';
 import 'package:chessju_app/features/profile/presentation/profile_screen.dart';
+import 'package:chessju_app/features/social/presentation/blocked_users_screen.dart';
+import 'package:chessju_app/features/social/presentation/conversation_detail_screen.dart';
+import 'package:chessju_app/features/social/presentation/conversations_screen.dart';
+import 'package:chessju_app/features/social/presentation/friend_requests_screen.dart';
+import 'package:chessju_app/features/social/presentation/friends_screen.dart';
 import 'package:chessju_app/features/tournaments/presentation/tournament_detail_screen.dart';
 import 'package:chessju_app/features/tournaments/presentation/tournament_list_screen.dart';
 import 'package:chessju_app/shared/widgets/main_scaffold.dart';
@@ -60,6 +65,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/clock',
             builder: (context, state) => const ClockScreen(),
+          ),
+          GoRoute(
+            path: '/friends',
+            builder: (context, state) => const FriendsScreen(),
+          ),
+          GoRoute(
+            path: '/friend-requests',
+            builder: (context, state) => const FriendRequestsScreen(),
+          ),
+          GoRoute(
+            path: '/blocks',
+            builder: (context, state) => const BlockedUsersScreen(),
+          ),
+          GoRoute(
+            path: '/conversations',
+            builder: (context, state) => const ConversationsScreen(),
+          ),
+          GoRoute(
+            path: '/conversations/:conversationId',
+            builder: (context, state) => ConversationDetailScreen(
+              conversationId: state.pathParameters['conversationId'] ?? '',
+            ),
           ),
           GoRoute(
             path: '/games',

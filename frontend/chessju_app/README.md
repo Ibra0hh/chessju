@@ -41,6 +41,7 @@ Current vertical slice:
 - PGN paste import
 - Stockfish analysis request/status/report display
 - Chess clock screen with casual setup, local countdown, backend event snapshots, and event history
+- Friends screen, friend requests, block management, conversations, and direct text messages
 
 Current game-review limitations:
 
@@ -54,3 +55,10 @@ Current clock limitations:
 - Official tournament/pairing clock backend support is not exposed as a dedicated Flutter workflow yet.
 - Sound and fullscreen controls are placeholders.
 - There is no offline mode or clock drift reconciliation UI.
+
+Current social/chat limitations:
+
+- Friend requests use a receiver user ID field because user search/discovery is not implemented yet.
+- Direct chat is text-only.
+- Group chat, tournament chat, media messages, and push notifications are not implemented.
+- SSE-driven chat refresh is not wired yet; screens use REST refreshes as the source of truth.

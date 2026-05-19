@@ -54,6 +54,11 @@ class MainScaffold extends ConsumerWidget {
               onPressed: () => context.go('/clock'),
               icon: const Icon(Icons.timer_outlined),
             ),
+            IconButton(
+              tooltip: 'Friends',
+              onPressed: () => context.go('/friends'),
+              icon: const Icon(Icons.people_outline),
+            ),
             if (username != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),

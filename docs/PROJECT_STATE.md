@@ -298,6 +298,26 @@ client is intentionally simple and focused on connecting cleanly to the existing
 - Official tournament/pairing clock backend exists, but a dedicated official Flutter flow is not
   implemented yet
 
+### Phase 19: Flutter Friends And Direct Chat UI
+
+- Friends screen available at `/friends`
+- Friend requests screen available at `/friend-requests`
+- Blocks screen available at `/blocks`
+- Conversations list available at `/conversations`
+- Direct conversation detail available at `/conversations/{conversationId}`
+- Friends route exposed through a People action in the authenticated app bar
+- Friend requests can be sent by receiver user ID for development/testing
+- Incoming friend requests can be accepted or rejected
+- Outgoing pending friend requests can be cancelled
+- Friends can be listed, removed, blocked, or opened as direct conversations
+- Blocked users can be listed and unblocked
+- Conversations list shows direct conversations and last-message summaries
+- Message thread supports text send, refresh, best-effort read marking, and soft-delete for own
+  messages
+- Message UI sanitizes deleted messages
+- User search, group chat, tournament chat, media messages, push notifications, and SSE-driven chat
+  refresh are intentionally delayed
+
 ## Current Database State
 
 Current Alembic head:
@@ -383,6 +403,7 @@ Endpoint groups currently implemented:
 - Flutter vertical-slice screens consuming backend content/authenticated endpoints
 - Flutter game library, PGN paste, game detail, board replay, and analysis report UI
 - Flutter chess clock UI for casual clock sessions and backend event history
+- Flutter friends, blocks, conversations, and direct text message UI
 
 ## Current Worker And Queue State
 
@@ -440,6 +461,20 @@ Endpoint groups currently implemented:
   - `/api/v1/clock/sessions/{session_id}/complete`
   - `/api/v1/clock/sessions/{session_id}/reset`
   - `/api/v1/clock/sessions/{session_id}/cancel`
+  - `/api/v1/friends/requests`
+  - `/api/v1/friends/requests/{request_id}/accept`
+  - `/api/v1/friends/requests/{request_id}/reject`
+  - `/api/v1/friends/requests/{request_id}/cancel`
+  - `/api/v1/friends`
+  - `/api/v1/friends/{user_id}`
+  - `/api/v1/blocks`
+  - `/api/v1/blocks/{blocked_id}`
+  - `/api/v1/conversations`
+  - `/api/v1/conversations/direct`
+  - `/api/v1/conversations/{conversation_id}`
+  - `/api/v1/conversations/{conversation_id}/messages`
+  - `/api/v1/conversations/{conversation_id}/read`
+  - `/api/v1/messages/{message_id}`
   - `/api/v1/notifications`
   - `/api/v1/notifications/unread-count`
   - `/api/v1/notifications/{notification_id}/read`
@@ -455,7 +490,7 @@ Latest known verification at this checkpoint:
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Flutter analyze: passed
-- Flutter test: `20 passed`
+- Flutter test: `24 passed`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -521,13 +556,13 @@ Latest known verification at this checkpoint:
 - Tournament chat
 - Media messages
 - End-to-end encrypted direct messages
+- Flutter user search/discovery for friend requests
+- Flutter SSE-driven chat refresh
 - Admin dashboard frontend
 - Deep-link routing for every detail page
 - Full SSE subscription UI
 - PGN file upload UI
 - Chess.com import UI
-- Chess clock UI
-- Friends/direct chat UI
 - Draggable board input
 - Engine arrows
 - Evaluation graph
@@ -538,8 +573,8 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- Add Chess.com import, chess clock, or friends/direct chat UI after Ibrahim chooses the next product
-  slice.
+- Add Chess.com import UI, PGN file upload UI, or SSE-driven social refresh after Ibrahim chooses
+  the next product slice.
 - Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.
 - Build a dedicated Flutter admin dashboard when Ibrahim wants admin workflows outside OpenAPI.
 - Add automatic pairing if tournament operations should move beyond manual pairing.

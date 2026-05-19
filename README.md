@@ -152,7 +152,8 @@ Flutter app foundation:
 - See `docs/FLUTTER_APP.md` for app structure, run commands, auth flow, and current screens.
 - The current Flutter vertical slice covers auth, home, news list/detail, tournaments list/detail
   with registration actions, leaderboard, games list/detail, PGN paste import, analysis
-  request/report viewing, chess clock UI, notifications, and profile editing.
+  request/report viewing, chess clock UI, friends/direct chat UI, notifications, and profile
+  editing.
 
 Run Flutter checks:
 
@@ -188,12 +189,13 @@ Stockfish analysis jobs through the worker, Chess.com public game import, and ch
 with append-only event logs, friends, blocking, direct conversations, direct text messages, admin
 chat moderation listing, in-app notifications, authenticated SSE events, and a Flutter vertical
 slice with API client, auth flow, responsive app shell, home/news/tournament/leaderboard/game/
-notification/profile screens, game detail replay, PGN paste import, analysis report viewing, and a
-casual chess clock UI that stores meaningful backend events without sending every tick. Automatic
+notification/profile screens, game detail replay, PGN paste import, analysis report viewing, a
+casual chess clock UI that stores meaningful backend events without sending every tick, and
+friends/direct chat screens for requests, blocks, conversations, and text messages. Automatic
 pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media
 messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, PGN file
-upload UI, engine arrows, evaluation graph behavior, and dedicated official tournament clock UI are
-intentionally delayed.
+upload UI, user search/discovery UI, SSE-driven chat refresh, engine arrows, evaluation graph
+behavior, and dedicated official tournament clock UI are intentionally delayed.
 
 ## Notes
 

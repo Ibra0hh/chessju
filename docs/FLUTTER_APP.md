@@ -63,7 +63,7 @@ verification.
 
 ## Current App Foundation
 
-Implemented in Phases 15-18:
+Implemented in Phases 15-19:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
 - iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
@@ -97,6 +97,12 @@ Implemented in Phases 15-18:
 - Start, pause, resume, switch-turn, flag, complete, reset, cancel, and adjust-time actions
 - Clock event history panel
 - Clock visual settings placeholders for color theme, sound, and fullscreen
+- Friends screen with friends list and direct conversation actions
+- Friend requests screen with incoming/outgoing pending request management
+- Send friend request by user ID for development until user search exists
+- Blocked users screen with unblock action
+- Conversations list screen
+- Direct message thread screen with text send, read marking, refresh, and soft-delete for own messages
 
 ## Auth Flow
 
@@ -171,6 +177,11 @@ Current screens:
 - Game detail and replay board
 - PGN import
 - Chess clock
+- Friends
+- Friend requests
+- Blocked users
+- Conversations
+- Conversation detail
 - Notifications
 - Profile
 
@@ -208,6 +219,23 @@ Other screen endpoints:
 - Clock complete: `POST /api/v1/clock/sessions/{session_id}/complete`
 - Clock reset: `POST /api/v1/clock/sessions/{session_id}/reset`
 - Clock cancel: `POST /api/v1/clock/sessions/{session_id}/cancel`
+- Friend requests: `GET /api/v1/friends/requests`
+- Send friend request: `POST /api/v1/friends/requests`
+- Accept friend request: `POST /api/v1/friends/requests/{request_id}/accept`
+- Reject friend request: `POST /api/v1/friends/requests/{request_id}/reject`
+- Cancel friend request: `POST /api/v1/friends/requests/{request_id}/cancel`
+- Friends: `GET /api/v1/friends`
+- Remove friend: `DELETE /api/v1/friends/{user_id}`
+- Blocks: `GET /api/v1/blocks`
+- Block user: `POST /api/v1/blocks`
+- Unblock user: `DELETE /api/v1/blocks/{blocked_id}`
+- Conversations: `GET /api/v1/conversations`
+- Direct conversation: `POST /api/v1/conversations/direct`
+- Conversation detail: `GET /api/v1/conversations/{conversation_id}`
+- Conversation messages: `GET /api/v1/conversations/{conversation_id}/messages`
+- Send message: `POST /api/v1/conversations/{conversation_id}/messages`
+- Mark conversation read: `POST /api/v1/conversations/{conversation_id}/read`
+- Delete own message: `DELETE /api/v1/messages/{message_id}`
 - Notifications: `GET /api/v1/notifications`
 - Unread count: `GET /api/v1/notifications/unread-count`
 - Mark notification read: `POST /api/v1/notifications/{notification_id}/read`
@@ -251,12 +279,32 @@ Chess clock behavior:
 - Sound and fullscreen controls are UI placeholders; no audio/vibration/fullscreen implementation is
   active yet.
 
+Friends and direct chat behavior:
+
+- Friends is exposed as a secondary app-bar action, not a bottom navigation tab, to keep mobile
+  navigation readable.
+- Friend requests can be sent by receiver user ID. Proper user search/discovery is a future backend
+  and UI improvement.
+- Incoming requests can be accepted or rejected.
+- Outgoing pending requests can be cancelled.
+- Friends can be removed, blocked, or opened as direct conversations.
+- Blocking and unblocking use the existing backend safety rules.
+- Conversations list shows direct conversations and last-message summaries.
+- Conversation detail supports text messages only.
+- Message send validates non-empty text in the UI before calling the backend.
+- The thread marks the conversation as read on open and after send as a best-effort call.
+- Users can soft-delete their own messages; deleted messages render as a sanitized deleted state.
+- SSE refetch integration is not wired in Phase 19; REST refresh remains authoritative.
+
 Still placeholder or future UI work:
 
 - PGN file upload UI
 - Chess.com import UI
 - Official tournament clock setup flow
-- Friends/direct chat UI
+- User search/discovery for friend requests
+- Group chat UI
+- Tournament chat UI
+- Media messages
 - SSE event consumption
 - Admin dashboard UI
 - Draggable board input
@@ -269,5 +317,6 @@ Still placeholder or future UI work:
 
 Recommended next UI phase:
 
-- Add Chess.com import, chess clock, or friends/direct chat UI after Ibrahim chooses the next product slice.
+- Add Chess.com import UI, PGN file upload UI, or SSE-driven social refresh after Ibrahim chooses
+  the next product slice.
 - Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.
