@@ -106,7 +106,8 @@ Implemented in Phases 15-20:
 - Admin dashboard route at `/admin` with admin/super_admin role visibility
 - Admin screens for news, announcements, time controls, tournaments, leaderboard, audit logs, and
   read-only operational lists
-- Tournament manager UI for registrations, rounds, manual pairings, result submission, and standings
+- Tournament manager UI for registrations, rounds, manual pairings, automatic pairing generation,
+  result submission, and standings
 
 ## Auth Flow
 
@@ -265,6 +266,8 @@ Other screen endpoints:
   and `PATCH /api/v1/admin/tournament-registrations/{registration_id}`
 - Admin rounds, pairings, results, and standings under `/api/v1/admin/rounds`,
   `/api/v1/admin/pairings`, and `/api/v1/admin/tournaments/{tournament_id}/standings`
+- Admin automatic pairing generation:
+  `POST /api/v1/admin/rounds/{round_id}/pairings/generate`
 - Admin leaderboard seasons/recompute: `/api/v1/admin/leaderboard`
 - Admin audit logs: `GET /api/v1/admin/audit-logs`
 - Admin read-only lists: games, analysis jobs, Chess.com sync jobs, and notifications
@@ -337,7 +340,10 @@ Admin dashboard behavior:
 - The admin dashboard uses a sidebar on wide layouts and a section picker on compact layouts.
 - Content management supports create/edit/publish/archive/delete for news and announcements.
 - Tournament management supports create/edit/lifecycle actions, registration status updates, round
-  creation/status actions, manual pairing creation, result submission, and standings viewing.
+  creation/status actions, manual pairing creation, automatic Swiss or round-robin generation,
+  result submission, and standings viewing.
+- Generated pairings remain regular pairings that admins can manually review and edit before
+  results are submitted.
 - Player and user selection uses ID inputs where the backend does not yet expose search/picker
   endpoints.
 - Operational admin lists for games, analysis jobs, Chess.com sync jobs, and notifications are
@@ -356,6 +362,7 @@ Still placeholder or future UI work:
 - Rich markdown editor for admin news
 - User search/player picker for admin forms
 - Drag/drop pairing tools
+- FIDE-certified pairing and advanced color-history optimization
 - Draggable board input
 - Engine arrows
 - Evaluation graph

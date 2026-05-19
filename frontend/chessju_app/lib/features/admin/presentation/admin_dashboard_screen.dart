@@ -1109,6 +1109,11 @@ class _RoundTile extends ConsumerWidget {
                 icon: const Icon(Icons.add),
                 label: const Text('Pairing'),
               ),
+              FilledButton.icon(
+                onPressed: () => _generatePairings(context, ref),
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Generate'),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1189,6 +1194,44 @@ class _RoundTile extends ConsumerWidget {
       await ref.read(adminRepositoryProvider).createPairing(round.id, payload);
       ref.invalidate(adminPairingsProvider(round.id));
       onMessage('Pairing created.');
+    } on ApiException catch (exception) {
+      onMessage(exception.error.message);
+    }
+  }
+
+  Future<void> _generatePairings(BuildContext context, WidgetRef ref) async {
+    final values = await _showFieldDialog(
+      context,
+      title: 'Generate pairings',
+      fields: const [
+        AdminFormField(
+          'method',
+          'Method',
+          initial: 'Swiss',
+          options: ['Swiss', 'Round Robin'],
+        ),
+        AdminFormField(
+          'overwrite_existing',
+          'Overwrite existing pending pairings',
+          initial: 'false',
+          options: ['false', 'true'],
+        ),
+      ],
+    );
+    if (values == null) {
+      return;
+    }
+    try {
+      final response = await ref
+          .read(adminRepositoryProvider)
+          .generatePairings(
+            round.id,
+            method: pairingGenerationMethodValue(values['method'] ?? 'Swiss'),
+            overwriteExisting: values['overwrite_existing'] == 'true',
+          );
+      ref.invalidate(adminPairingsProvider(round.id));
+      ref.invalidate(adminTournamentStandingsProvider(tournamentId));
+      onMessage('Generated ${response.items.length} pairings.');
     } on ApiException catch (exception) {
       onMessage(exception.error.message);
     }

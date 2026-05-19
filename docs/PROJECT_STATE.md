@@ -340,8 +340,27 @@ client is intentionally simple and focused on connecting cleanly to the existing
 - Optional read-only admin list panels show games, analysis jobs, Chess.com sync jobs, and
   notifications
 - Admin forms use raw user/player IDs where search or picker endpoints do not exist yet
-- Rich markdown editor, drag/drop pairings, automatic pairing, and production admin polish are
-  intentionally delayed
+- Rich markdown editor, drag/drop pairings, and production admin polish are intentionally delayed
+
+### Phase 21: Automatic Tournament Pairing Engine
+
+- Admin endpoint for automatic pairing generation:
+  `POST /api/v1/admin/rounds/{round_id}/pairings/generate`
+- Supported methods:
+  - `swiss`
+  - `round_robin`
+- Basic Swiss generator uses current standings, pairs players with similar scores, avoids rematches
+  when practical, assigns byes, and performs simple color balancing
+- Round-robin generator uses a circle-style rotation for the selected round, supports odd-player
+  byes, and avoids already-played matchups where practical
+- Generated pairings are normal `pairings` rows and remain manually editable before results
+- Bye pairings are created as completed `bye` results and create tournament game records
+- Existing pending pairings can be overwritten only with explicit admin confirmation
+- Pairings with submitted results cannot be overwritten by generation
+- `pairing.generated` audit log action records the generated pairings
+- Flutter admin tournament manager includes a Generate Pairings button, method dropdown, and
+  overwrite control
+- The pairing engine is practical ChessJU logic and is not FIDE-certified
 
 ## Current Database State
 
@@ -411,6 +430,7 @@ Endpoint groups currently implemented:
 - Admin tournament and time-control endpoints
 - Public rounds, pairings, and standings endpoints
 - Admin rounds, pairings, and results endpoints
+- Admin automatic pairing generation endpoint
 - Public JU leaderboard endpoints
 - Admin leaderboard endpoints
 - Game library and PGN endpoints
@@ -430,6 +450,7 @@ Endpoint groups currently implemented:
 - Flutter chess clock UI for casual clock sessions and backend event history
 - Flutter friends, blocks, conversations, and direct text message UI
 - Flutter admin dashboard, tournament manager, leaderboard recompute, and audit log UI
+- Flutter admin automatic pairing controls
 
 ## Current Worker And Queue State
 
@@ -456,8 +477,8 @@ Endpoint groups currently implemented:
   - `flutter_secure_storage`
   - `shared_preferences`
   - `uuid`
-- Flutter analyze: passed at Phase 17 implementation time
-- Flutter test: passed at Phase 17 implementation time
+- Flutter analyze: passed at Phase 21 implementation time
+- Flutter test: passed at Phase 21 implementation time
 - Current vertical slice consumes:
   - `/api/v1/home`
   - `/api/v1/news`
@@ -521,6 +542,7 @@ Endpoint groups currently implemented:
   - `/api/v1/admin/tournament-registrations/{registration_id}`
   - `/api/v1/admin/tournaments/{tournament_id}/rounds`
   - `/api/v1/admin/rounds/{round_id}/pairings`
+  - `/api/v1/admin/rounds/{round_id}/pairings/generate`
   - `/api/v1/admin/pairings/{pairing_id}/result`
   - `/api/v1/admin/tournaments/{tournament_id}/standings`
   - `/api/v1/admin/leaderboard`
@@ -532,11 +554,11 @@ Endpoint groups currently implemented:
 
 Latest known verification at this checkpoint:
 
-- pytest: `306 passed`
+- pytest: `319 passed`
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Flutter analyze: passed
-- Flutter test: `30 passed`
+- Flutter test: `31 passed`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -547,9 +569,9 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 19 commit before Phase 20:
-  `5613fea5618a865f5b53a44ef483c2a8f186f98c`
-- Git status before Phase 20 implementation: clean
+- Latest completed Phase 20 commit before Phase 21:
+  `3d67c4a3b6cdd818951ec102bff8266d9e5d9adf`
+- Git status before Phase 21 implementation: clean
 
 ## Important Permanent Rules
 
@@ -559,6 +581,9 @@ Latest known verification at this checkpoint:
 - Admin mutations must write audit logs.
 - The frontend must not calculate official tournament standings.
 - The frontend must not calculate official JU leaderboard ranks.
+- Automatic pairing generation is admin-only and generated pairings must remain auditable.
+- Generated pairings are helper output, not final authority; admins can manually review and edit
+  pending pairings.
 - Stockfish must run through worker/background jobs, not inside normal API request handlers.
 - Chess.com integration must use public read-only API data only.
 - Do not ask for Chess.com passwords.
@@ -582,8 +607,6 @@ Latest known verification at this checkpoint:
 ## Not Implemented Yet
 
 - Full Flutter UI implementation beyond the current vertical slice
-- Automatic Swiss pairing
-- Automatic round-robin generation
 - Advanced tie-breaks
 - Production monitoring stack
 - External object storage
@@ -607,6 +630,8 @@ Latest known verification at this checkpoint:
 - Admin rich markdown editor
 - Admin user search/player picker
 - Admin drag/drop pairing UI
+- FIDE-certified tournament pairing
+- Advanced color history optimization
 - Deep-link routing for every detail page
 - Full SSE subscription UI
 - PGN file upload UI
@@ -624,4 +649,5 @@ Candidate next areas:
 - Add Chess.com import UI, PGN file upload UI, admin UI polish, or SSE-driven social refresh after
   Ibrahim chooses the next product slice.
 - Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.
-- Add automatic pairing if tournament operations should move beyond manual pairing.
+- Add advanced pairing certification and deeper color-history/tie-break logic only if tournament
+  operations require it later.

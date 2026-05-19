@@ -44,6 +44,7 @@ Current vertical slice:
 - Friends screen, friend requests, block management, conversations, and direct text messages
 - Admin dashboard foundation with content management, tournament manager, leaderboard recompute,
   audit logs, and read-only operational lists
+- Admin tournament manager automatic Swiss/Round Robin pairing generation for selected rounds
 
 Current game-review limitations:
 
@@ -69,6 +70,7 @@ Current admin limitations:
 
 - Admin user and player selection uses raw IDs until search/picker endpoints exist.
 - News editing uses a plain text markdown field, not a rich editor.
-- Pairing creation is manual; there is no drag/drop pairing board or automatic Swiss pairing.
+- Generated pairings can be reviewed and edited manually; there is no drag/drop pairing board or
+  FIDE-certified pairing engine.
 - Operational games, analysis, Chess.com sync, and notifications admin panels are read-only.
 - iOS builds are not run from Windows.

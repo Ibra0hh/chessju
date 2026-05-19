@@ -183,20 +183,22 @@ Local URLs:
 Implemented backend foundations now include auth/users, admin audit logs, files, news,
 announcements, home content, time controls, tournaments, tournament registration MVP behavior,
 manual rounds, manual pairings, result entry, linked tournament game records, basic tournament
-standings, the global JU leaderboard, PGN paste/upload, normalized game moves, authenticated game
+standings, automatic Swiss/Round Robin pairing generation, the global JU leaderboard, PGN
+paste/upload, normalized game moves, authenticated game
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
 Stockfish analysis jobs through the worker, Chess.com public game import, and chess clock sessions
 with append-only event logs, friends, blocking, direct conversations, direct text messages, admin
 chat moderation listing, in-app notifications, authenticated SSE events, and a Flutter vertical
 slice with API client, auth flow, responsive app shell, home/news/tournament/leaderboard/game/
 notification/profile screens, game detail replay, PGN paste import, analysis report viewing, a
-casual chess clock UI that stores meaningful backend events without sending every tick, and
-friends/direct chat screens for requests, blocks, conversations, and text messages. Automatic
-pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat, media
+casual chess clock UI that stores meaningful backend events without sending every tick,
+friends/direct chat screens for requests, blocks, conversations, and text messages, and an admin
+tournament manager button for Swiss/Round Robin pairing generation. Advanced tie-breaks, Lichess
+import, scheduled sync, group chat, tournament chat, media
 messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, PGN file
 upload UI, user search/discovery UI, admin player picker/search, drag/drop pairing UI,
-SSE-driven chat refresh, engine arrows, evaluation graph behavior, and dedicated official
-tournament clock UI are intentionally delayed.
+SSE-driven chat refresh, engine arrows, evaluation graph behavior, FIDE-certified pairing, advanced
+color-history optimization, and dedicated official tournament clock UI are intentionally delayed.
 
 ## Notes
 

@@ -13,6 +13,7 @@ from app.tournaments.schemas import (
     DeleteTournamentResponse,
     PairingBulkCreateRequest,
     PairingCreateRequest,
+    PairingGenerateRequest,
     PairingListResponse,
     PairingResponse,
     PairingUpdateRequest,
@@ -48,6 +49,7 @@ from app.tournaments.services import (
     create_round,
     create_time_control,
     create_tournament,
+    generate_pairings_for_round,
     get_admin_round_detail,
     get_admin_tournament,
     get_public_round_detail,
@@ -640,6 +642,28 @@ async def admin_bulk_create_pairings(
     session: AsyncSession = Depends(get_db_session),
 ) -> PairingListResponse:
     return await bulk_create_pairings(
+        session=session,
+        admin_id=current_admin.id,
+        round_id=round_id,
+        payload=payload,
+        ip_address=_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+    )
+
+
+@router.post(
+    "/admin/rounds/{round_id}/pairings/generate",
+    response_model=PairingListResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def admin_generate_pairings(
+    round_id: uuid.UUID,
+    payload: PairingGenerateRequest,
+    request: Request,
+    current_admin: User = Depends(require_admin),
+    session: AsyncSession = Depends(get_db_session),
+) -> PairingListResponse:
+    return await generate_pairings_for_round(
         session=session,
         admin_id=current_admin.id,
         round_id=round_id,

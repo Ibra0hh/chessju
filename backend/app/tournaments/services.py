@@ -14,12 +14,20 @@ from app.common.time import utc_now
 from app.files.models import FileRecord
 from app.games.models import Game
 from app.tournaments.models import Pairing, Round, TimeControl, Tournament, TournamentRegistration
+from app.tournaments.pairing_engine import (
+    GeneratedPairing,
+    PairingPlayer,
+    PreviousPairSet,
+    generate_round_robin_pairings,
+    generate_swiss_pairings,
+)
 from app.tournaments.schemas import (
     AdminTournamentListResponse,
     AdminTournamentResponse,
     DeleteTournamentResponse,
     PairingBulkCreateRequest,
     PairingCreateRequest,
+    PairingGenerateRequest,
     PairingListResponse,
     PairingResponse,
     PairingUpdateRequest,
@@ -1373,6 +1381,230 @@ async def bulk_create_pairings(
         limit=len(responses),
         offset=0,
         total=len(responses),
+    )
+
+
+async def _round_pairings(session: AsyncSession, round_id: uuid.UUID) -> list[Pairing]:
+    result = await session.execute(
+        select(Pairing).where(Pairing.round_id == round_id).order_by(Pairing.board_number.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def _pairing_engine_history(
+    session: AsyncSession,
+    tournament_id: uuid.UUID,
+    exclude_round_id: uuid.UUID,
+) -> tuple[PreviousPairSet, dict[uuid.UUID, tuple[int, int]], set[uuid.UUID]]:
+    result = await session.execute(
+        select(Pairing).where(
+            Pairing.tournament_id == tournament_id,
+            Pairing.round_id != exclude_round_id,
+            Pairing.status != "cancelled",
+        )
+    )
+    previous_pairs: PreviousPairSet = set()
+    color_counts: dict[uuid.UUID, list[int]] = {}
+    bye_users: set[uuid.UUID] = set()
+    for pairing in result.scalars():
+        if pairing.white_user_id is not None:
+            color_counts.setdefault(pairing.white_user_id, [0, 0])[0] += 1
+        if pairing.black_user_id is not None:
+            color_counts.setdefault(pairing.black_user_id, [0, 0])[1] += 1
+        if pairing.white_user_id is not None and pairing.black_user_id is not None:
+            previous_pairs.add(frozenset((pairing.white_user_id, pairing.black_user_id)))
+        elif pairing.white_user_id is not None:
+            bye_users.add(pairing.white_user_id)
+        elif pairing.black_user_id is not None:
+            bye_users.add(pairing.black_user_id)
+    return (
+        previous_pairs,
+        {user_id: (counts[0], counts[1]) for user_id, counts in color_counts.items()},
+        bye_users,
+    )
+
+
+async def _approved_pairing_engine_players(
+    session: AsyncSession,
+    tournament_id: uuid.UUID,
+    color_counts: dict[uuid.UUID, tuple[int, int]],
+    bye_users: set[uuid.UUID],
+) -> list[PairingPlayer]:
+    registration_result = await session.execute(
+        select(TournamentRegistration.user_id, TournamentRegistration.seed_rating, Profile.username)
+        .join(Profile, Profile.user_id == TournamentRegistration.user_id)
+        .where(
+            TournamentRegistration.tournament_id == tournament_id,
+            TournamentRegistration.status == "approved",
+        )
+    )
+    standings = await compute_tournament_standings(session, tournament_id)
+    standing_by_user_id = {row.user_id: row for row in standings.items}
+    players: list[PairingPlayer] = []
+    for seed_order, (user_id, seed_rating, username) in enumerate(registration_result.all()):
+        standing = standing_by_user_id[user_id]
+        white_games, black_games = color_counts.get(user_id, (0, 0))
+        players.append(
+            PairingPlayer(
+                user_id=user_id,
+                username=username,
+                points=standing.points,
+                wins=standing.wins,
+                draws=standing.draws,
+                games_played=standing.games_played,
+                white_games=white_games,
+                black_games=black_games,
+                had_bye=user_id in bye_users,
+                seed_order=-(seed_rating or 0) * 10_000 + seed_order,
+            )
+        )
+    return players
+
+
+def _validate_generated_pairings(pairings: list[GeneratedPairing]) -> None:
+    player_ids: list[uuid.UUID] = []
+    for pairing in pairings:
+        _validate_pairing_shape(pairing.white_user_id, pairing.black_user_id, pairing.result)
+        player_ids.extend(
+            user_id for user_id in (pairing.white_user_id, pairing.black_user_id) if user_id
+        )
+    if len(player_ids) != len(set(player_ids)):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Generated pairings include a duplicate player",
+        )
+
+
+async def generate_pairings_for_round(
+    session: AsyncSession,
+    admin_id: uuid.UUID,
+    round_id: uuid.UUID,
+    payload: PairingGenerateRequest,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> PairingListResponse:
+    round_record = await get_admin_round(session, round_id)
+    tournament = await get_admin_tournament(session, round_record.tournament_id)
+    _ensure_pairing_allowed_for_tournament(tournament)
+    if round_record.status not in {"draft", "published"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pairings can only be generated for draft or published rounds",
+        )
+
+    existing_pairings = await _round_pairings(session, round_id)
+    removed_pairings = [pairing_audit_snapshot(pairing) for pairing in existing_pairings]
+    if existing_pairings and not payload.overwrite_existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Round already has pairings",
+        )
+    if payload.overwrite_existing and any(
+        pairing.result != "pending" for pairing in existing_pairings
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot overwrite pairings after results are submitted",
+        )
+
+    previous_pairs, color_counts, bye_users = await _pairing_engine_history(
+        session,
+        tournament_id=round_record.tournament_id,
+        exclude_round_id=round_id,
+    )
+    players = await _approved_pairing_engine_players(
+        session,
+        tournament_id=round_record.tournament_id,
+        color_counts=color_counts,
+        bye_users=bye_users,
+    )
+    if len(players) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least two approved players are required to generate pairings",
+        )
+
+    if payload.method == "round_robin":
+        generated_pairings = generate_round_robin_pairings(
+            players,
+            previous_pairs,
+            round_number=round_record.round_number,
+        )
+    else:
+        generated_pairings = generate_swiss_pairings(
+            players,
+            previous_pairs,
+            round_number=round_record.round_number,
+        )
+    if not generated_pairings:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No pairings could be generated for this round",
+        )
+    _validate_generated_pairings(generated_pairings)
+
+    try:
+        for pairing in existing_pairings:
+            await session.delete(pairing)
+        if existing_pairings:
+            await session.flush()
+
+        now = utc_now()
+        created_pairings: list[Pairing] = []
+        for board_number, generated in enumerate(generated_pairings, start=1):
+            is_bye = generated.result == "bye"
+            pairing = Pairing(
+                round_id=round_id,
+                tournament_id=round_record.tournament_id,
+                board_number=board_number,
+                white_user_id=generated.white_user_id,
+                black_user_id=generated.black_user_id,
+                status="completed" if is_bye else "scheduled",
+                result=generated.result,
+                result_reported_by=admin_id if is_bye else None,
+                result_reported_at=now if is_bye else None,
+            )
+            session.add(pairing)
+            created_pairings.append(pairing)
+        await session.flush()
+        for pairing in created_pairings:
+            if pairing.result == "bye":
+                await _upsert_game_for_pairing(session, pairing)
+        await create_admin_action_log(
+            db=session,
+            admin_id=admin_id,
+            action="pairing.generated",
+            entity_type="round",
+            entity_id=round_id,
+            after={
+                "round_id": str(round_id),
+                "tournament_id": str(round_record.tournament_id),
+                "method": payload.method,
+                "overwrite_existing": payload.overwrite_existing,
+                "removed_pairings": removed_pairings if existing_pairings else [],
+                "pairings": [pairing_audit_snapshot(pairing) for pairing in created_pairings],
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Generated pairings conflict with existing board numbers",
+        ) from exc
+    except Exception:
+        await session.rollback()
+        raise
+
+    for pairing in created_pairings:
+        await session.refresh(pairing)
+    return PairingListResponse(
+        items=[await build_pairing_response(session, pairing) for pairing in created_pairings],
+        limit=len(created_pairings),
+        offset=0,
+        total=len(created_pairings),
     )
 
 

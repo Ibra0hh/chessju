@@ -699,3 +699,233 @@ def test_cancelled_rejected_waitlisted_registrations_excluded_from_standings() -
     assert members[1]["user"]["id"] not in ids
     assert members[2]["user"]["id"] not in ids
     assert members[3]["user"]["id"] not in ids
+
+
+def generate_pairings(
+    admin_data: dict,
+    round_id: str,
+    method: str = "swiss",
+    overwrite_existing: bool = False,
+) -> dict:
+    response = client.post(
+        f"/api/v1/admin/rounds/{round_id}/pairings/generate",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+        json={"method": method, "overwrite_existing": overwrite_existing},
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def paired_user_ids(pairings: list[dict]) -> set[str]:
+    ids: set[str] = set()
+    for pairing in pairings:
+        if pairing["white_user"]:
+            ids.add(pairing["white_user"]["id"])
+        if pairing["black_user"]:
+            ids.add(pairing["black_user"]["id"])
+    return ids
+
+
+def normal_pair_sets(pairings: list[dict]) -> set[frozenset[str]]:
+    return {
+        frozenset((pairing["white_user"]["id"], pairing["black_user"]["id"]))
+        for pairing in pairings
+        if pairing["white_user"] and pairing["black_user"]
+    }
+
+
+def test_admin_can_generate_swiss_pairings() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(4)
+
+    response = generate_pairings(admin_data, round_record["id"], method="swiss")
+
+    assert response["total"] == 2
+    assert [item["board_number"] for item in response["items"]] == [1, 2]
+    assert paired_user_ids(response["items"]) == {member["user"]["id"] for member in members}
+
+
+def test_member_cannot_generate_pairings() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(4)
+
+    response = client.post(
+        f"/api/v1/admin/rounds/{round_record['id']}/pairings/generate",
+        headers=auth_headers(members[0]["tokens"]["access_token"]),
+        json={"method": "swiss"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_swiss_pairs_approved_players_only() -> None:
+    admin_data = register_admin()
+    tournament = create_open_tournament(admin_data, max_players=8)
+    members = create_registered_members(5, tournament["id"])
+    asyncio.run(force_registration_status(members[2]["user"]["id"], tournament["id"], "waitlisted"))
+    asyncio.run(force_registration_status(members[3]["user"]["id"], tournament["id"], "cancelled"))
+    asyncio.run(force_registration_status(members[4]["user"]["id"], tournament["id"], "rejected"))
+    close_response = client.post(
+        f"/api/v1/admin/tournaments/{tournament['id']}/close-registration",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+    )
+    assert close_response.status_code == 200, close_response.text
+    round_record = create_round(admin_data, tournament["id"])
+
+    response = generate_pairings(admin_data, round_record["id"], method="swiss")
+
+    assert response["total"] == 1
+    assert paired_user_ids(response["items"]) == {
+        members[0]["user"]["id"],
+        members[1]["user"]["id"],
+    }
+
+
+def test_swiss_creates_bye_for_odd_player_count() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(5)
+
+    response = generate_pairings(admin_data, round_record["id"], method="swiss")
+
+    byes = [item for item in response["items"] if item["result"] == "bye"]
+    assert len(byes) == 1
+    assert byes[0]["status"] == "completed"
+    assert bool(byes[0]["white_user"]) != bool(byes[0]["black_user"])
+    assert paired_user_ids(response["items"]) == {member["user"]["id"] for member in members}
+
+
+def test_swiss_avoids_rematches_when_possible() -> None:
+    admin_data, tournament, members, round_one = setup_round_with_members(4)
+    first_pairing = create_pairing(
+        admin_data,
+        round_one["id"],
+        members[0]["user"]["id"],
+        members[1]["user"]["id"],
+        board_number=1,
+    )
+    second_pairing = create_pairing(
+        admin_data,
+        round_one["id"],
+        members[2]["user"]["id"],
+        members[3]["user"]["id"],
+        board_number=2,
+    )
+    submit_result(admin_data, first_pairing["id"], "white_win")
+    submit_result(admin_data, second_pairing["id"], "draw")
+    round_two = create_round(admin_data, tournament["id"], round_number=2)
+    previous_pairs = normal_pair_sets([first_pairing, second_pairing])
+
+    response = generate_pairings(admin_data, round_two["id"], method="swiss")
+
+    assert normal_pair_sets(response["items"]).isdisjoint(previous_pairs)
+
+
+def test_swiss_rejects_if_fewer_than_two_approved_players() -> None:
+    admin_data = register_admin()
+    tournament = create_open_tournament(admin_data)
+    create_registered_members(1, tournament["id"])
+    close_response = client.post(
+        f"/api/v1/admin/tournaments/{tournament['id']}/close-registration",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+    )
+    assert close_response.status_code == 200, close_response.text
+    round_record = create_round(admin_data, tournament["id"])
+
+    response = client.post(
+        f"/api/v1/admin/rounds/{round_record['id']}/pairings/generate",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+        json={"method": "swiss"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_swiss_rejects_existing_pairings_without_overwrite() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(4)
+    create_pairing(
+        admin_data, round_record["id"], members[0]["user"]["id"], members[1]["user"]["id"]
+    )
+
+    response = client.post(
+        f"/api/v1/admin/rounds/{round_record['id']}/pairings/generate",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+        json={"method": "swiss"},
+    )
+
+    assert response.status_code == 409
+
+
+def test_swiss_overwrite_rejects_completed_pairing() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(4)
+    pairing = create_pairing(
+        admin_data, round_record["id"], members[0]["user"]["id"], members[1]["user"]["id"]
+    )
+    submit_result(admin_data, pairing["id"], "white_win")
+
+    response = client.post(
+        f"/api/v1/admin/rounds/{round_record['id']}/pairings/generate",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+        json={"method": "swiss", "overwrite_existing": True},
+    )
+
+    assert response.status_code == 400
+
+
+def test_swiss_overwrite_replaces_pending_pairings() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(4)
+    old_pairing = create_pairing(
+        admin_data, round_record["id"], members[0]["user"]["id"], members[1]["user"]["id"]
+    )
+
+    response = generate_pairings(
+        admin_data,
+        round_record["id"],
+        method="swiss",
+        overwrite_existing=True,
+    )
+    listed = client.get(
+        f"/api/v1/admin/rounds/{round_record['id']}/pairings",
+        headers=auth_headers(admin_data["tokens"]["access_token"]),
+    )
+
+    assert response["total"] == 2
+    assert listed.status_code == 200
+    assert listed.json()["total"] == 2
+    assert old_pairing["id"] not in {item["id"] for item in listed.json()["items"]}
+
+
+def test_round_robin_generates_pairings() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(4)
+
+    response = generate_pairings(admin_data, round_record["id"], method="round_robin")
+
+    assert response["total"] == 2
+    assert paired_user_ids(response["items"]) == {member["user"]["id"] for member in members}
+
+
+def test_round_robin_creates_bye_for_odd_count() -> None:
+    admin_data, _, members, round_record = setup_round_with_members(5)
+
+    response = generate_pairings(admin_data, round_record["id"], method="round_robin")
+
+    assert len([item for item in response["items"] if item["result"] == "bye"]) == 1
+    assert paired_user_ids(response["items"]) == {member["user"]["id"] for member in members}
+
+
+def test_round_robin_avoids_duplicate_previous_matchup() -> None:
+    admin_data, tournament, _, round_one = setup_round_with_members(4)
+    first_round = generate_pairings(admin_data, round_one["id"], method="round_robin")
+    round_two = create_round(admin_data, tournament["id"], round_number=2)
+
+    second_round = generate_pairings(admin_data, round_two["id"], method="round_robin")
+
+    assert normal_pair_sets(second_round["items"]).isdisjoint(
+        normal_pair_sets(first_round["items"])
+    )
+
+
+def test_generated_pairings_create_audit_log() -> None:
+    admin_data, _, _, round_record = setup_round_with_members(4)
+
+    generate_pairings(admin_data, round_record["id"], method="swiss")
+    log = latest_audit_log("pairing.generated", round_record["id"], admin_data)
+
+    assert log["after"]["method"] == "swiss"
+    assert len(log["after"]["pairings"]) == 2

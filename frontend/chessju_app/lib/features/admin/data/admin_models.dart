@@ -35,6 +35,22 @@ String resultLabelFor(String value) {
   };
 }
 
+String pairingGenerationMethodLabel(String value) {
+  return switch (value) {
+    'swiss' => 'Swiss',
+    'round_robin' => 'Round Robin',
+    _ => value.replaceAll('_', ' '),
+  };
+}
+
+String pairingGenerationMethodValue(String label) {
+  return switch (label) {
+    'Swiss' => 'swiss',
+    'Round Robin' => 'round_robin',
+    _ => label.toLowerCase().replaceAll(' ', '_'),
+  };
+}
+
 extension CurrentUserAdminAccess on CurrentUser {
   bool get isAdmin => hasAdminAccessForRoles(roles);
 }

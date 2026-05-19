@@ -385,6 +385,13 @@ void main() {
     expect(resultLabelFor('pending'), 'Pending');
   });
 
+  test('Pairing generation method helper maps labels and values', () {
+    expect(pairingGenerationMethodLabel('swiss'), 'Swiss');
+    expect(pairingGenerationMethodLabel('round_robin'), 'Round Robin');
+    expect(pairingGenerationMethodValue('Swiss'), 'swiss');
+    expect(pairingGenerationMethodValue('Round Robin'), 'round_robin');
+  });
+
   test('Admin form validation helpers catch missing fields', () {
     expect(validateRequiredText('', 'Title'), 'Title is required');
     expect(validateRequiredText('ChessJU', 'Title'), isNull);

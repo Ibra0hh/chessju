@@ -317,6 +317,19 @@ class AdminRepository {
     );
   }
 
+  Future<PaginatedResponse<AdminPairing>> generatePairings(
+    String roundId, {
+    required String method,
+    bool overwriteExisting = false,
+  }) {
+    return _apiClient.post<PaginatedResponse<AdminPairing>>(
+      '/admin/rounds/$roundId/pairings/generate',
+      data: {'method': method, 'overwrite_existing': overwriteExisting},
+      parse: (data) =>
+          PaginatedResponse.fromJson(_asMap(data), AdminPairing.fromJson),
+    );
+  }
+
   Future<AdminPairing> updatePairing(String id, Map<String, Object?> payload) {
     return _apiClient.patch<AdminPairing>(
       '/admin/pairings/$id',

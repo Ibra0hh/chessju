@@ -31,6 +31,7 @@ PairingResult = Literal[
     "double_forfeit",
     "bye",
 ]
+PairingGenerationMethod = Literal["swiss", "round_robin"]
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -323,6 +324,11 @@ class PairingCreateRequest(BaseModel):
 
 class PairingBulkCreateRequest(BaseModel):
     pairings: list[PairingCreateRequest] = Field(min_length=1, max_length=200)
+
+
+class PairingGenerateRequest(BaseModel):
+    method: PairingGenerationMethod = "swiss"
+    overwrite_existing: bool = False
 
 
 class PairingUpdateRequest(BaseModel):

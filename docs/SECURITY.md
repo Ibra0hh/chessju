@@ -46,11 +46,24 @@ Phase 6 playing-flow security rules:
 
 - Round, pairing, and result admin endpoints require `admin` or `super_admin`
 - Manual pairings require approved tournament registrants
+- Automatic pairing generation requires `admin` or `super_admin`
+- Generated pairings are built from approved tournament registrants only
+- Pairing generation rejects cancelled, completed, deleted, or invalid tournament/round states
+- Existing pairings are not overwritten unless the admin explicitly requests overwrite and all
+  existing results are still pending
 - A player cannot appear twice in the same active round
 - Pairing result submission is admin-only in this phase
 - Cancelled pairings cannot receive results
 - Public round and pairing endpoints hide draft rounds
-- Round, pairing, and result mutations write audit log entries
+- Round, pairing, generated pairing, and result mutations write audit log entries
+
+Phase 21 automatic pairing limitations:
+
+- Swiss pairing is a simplified ChessJU implementation, not a FIDE-certified pairing engine
+- Round-robin generation handles one selected round at a time
+- Rematches and color imbalance are avoided where practical, but complex edge cases can still
+  require admin review
+- Admins can manually edit generated pairings before submitting results
 
 Phase 6 scoring:
 
