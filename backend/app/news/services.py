@@ -541,11 +541,13 @@ async def soft_delete_announcement(
 
 
 async def get_home_content(session: AsyncSession) -> HomeResponse:
+    from app.tournaments.services import list_home_upcoming_tournaments
+
     announcements = await list_public_announcements(session, limit=5, offset=0)
     latest_news = await list_public_articles(session, limit=5, offset=0)
     return HomeResponse(
         announcements=announcements.items,
         latest_news=latest_news.items,
-        upcoming_tournaments=[],
+        upcoming_tournaments=await list_home_upcoming_tournaments(session, limit=5),
         leaderboard_preview=[],
     )

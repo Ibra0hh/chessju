@@ -1,0 +1,244 @@
+import re
+import uuid
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+TournamentStatus = Literal[
+    "draft",
+    "published",
+    "registration_open",
+    "registration_closed",
+    "check_in",
+    "in_progress",
+    "completed",
+    "cancelled",
+]
+TournamentCreateStatus = Literal["draft", "published", "registration_open", "registration_closed"]
+TournamentFormat = Literal["swiss", "round_robin", "knockout", "arena", "manual"]
+TimeControlType = Literal["bullet", "blitz", "rapid", "classical", "custom"]
+RegistrationStatus = Literal["pending", "approved", "waitlisted", "cancelled", "rejected"]
+
+SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+class TimeControlCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    base_seconds: int = Field(gt=0)
+    increment_seconds: int = Field(default=0, ge=0)
+    delay_seconds: int = Field(default=0, ge=0)
+    type: TimeControlType
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name cannot be blank")
+        return normalized
+
+
+class TimeControlUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    base_seconds: int | None = Field(default=None, gt=0)
+    increment_seconds: int | None = Field(default=None, ge=0)
+    delay_seconds: int | None = Field(default=None, ge=0)
+    type: TimeControlType | None = None
+
+    @field_validator("name")
+    @classmethod
+    def strip_optional_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Name cannot be blank")
+        return normalized
+
+
+class TimeControlResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    base_seconds: int
+    increment_seconds: int
+    delay_seconds: int
+    type: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TimeControlListResponse(BaseModel):
+    items: list[TimeControlResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class TournamentCreateRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=180)
+    slug: str | None = Field(default=None, min_length=1, max_length=220)
+    description: str | None = Field(default=None, max_length=5000)
+    status: TournamentCreateStatus = "draft"
+    format: TournamentFormat
+    time_control_id: uuid.UUID | None = None
+    max_players: int | None = Field(default=None, gt=0)
+    starts_at: datetime
+    ends_at: datetime | None = None
+    registration_open_at: datetime | None = None
+    registration_close_at: datetime | None = None
+    location: str | None = Field(default=None, max_length=255)
+    cover_file_id: uuid.UUID | None = None
+
+    @field_validator("title", "slug", "description", "location")
+    @classmethod
+    def strip_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Text fields cannot be blank")
+        return normalized
+
+    @field_validator("slug")
+    @classmethod
+    def validate_slug(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not SLUG_PATTERN.fullmatch(normalized):
+            raise ValueError("Slug must use lowercase letters, numbers, and hyphens")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_dates(self) -> "TournamentCreateRequest":
+        if self.ends_at is not None and self.ends_at <= self.starts_at:
+            raise ValueError("ends_at must be after starts_at")
+        if self.registration_close_at is not None and self.registration_close_at >= self.starts_at:
+            raise ValueError("registration_close_at must be before starts_at")
+        return self
+
+
+class TournamentUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=180)
+    slug: str | None = Field(default=None, min_length=1, max_length=220)
+    description: str | None = Field(default=None, max_length=5000)
+    format: TournamentFormat | None = None
+    time_control_id: uuid.UUID | None = None
+    max_players: int | None = Field(default=None, gt=0)
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    registration_open_at: datetime | None = None
+    registration_close_at: datetime | None = None
+    location: str | None = Field(default=None, max_length=255)
+    cover_file_id: uuid.UUID | None = None
+
+    @field_validator("title", "slug", "description", "location")
+    @classmethod
+    def strip_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Text fields cannot be blank")
+        return normalized
+
+    @field_validator("slug")
+    @classmethod
+    def validate_optional_slug(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not SLUG_PATTERN.fullmatch(normalized):
+            raise ValueError("Slug must use lowercase letters, numbers, and hyphens")
+        return normalized
+
+
+class TournamentRegistrationUpdateRequest(BaseModel):
+    status: RegistrationStatus
+    seed_rating: int | None = Field(default=None, ge=0)
+    checked_in_at: datetime | None = None
+
+
+class TournamentRegistrationResponse(BaseModel):
+    id: uuid.UUID
+    tournament_id: uuid.UUID
+    user_id: uuid.UUID
+    status: str
+    seed_rating: int | None
+    checked_in_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    cancelled_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TournamentSummaryResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    slug: str
+    status: str
+    format: str
+    starts_at: datetime
+    location: str | None
+    cover_file_id: uuid.UUID | None
+    time_control: TimeControlResponse | None
+    max_players: int | None
+    approved_count: int
+    waitlisted_count: int
+    spots_remaining: int | None
+
+
+class TournamentDetailResponse(TournamentSummaryResponse):
+    description: str | None
+    ends_at: datetime | None
+    registration_open_at: datetime | None
+    registration_close_at: datetime | None
+    created_at: datetime
+    my_registration: TournamentRegistrationResponse | None = None
+
+
+class AdminTournamentResponse(TournamentDetailResponse):
+    created_by: uuid.UUID
+    updated_at: datetime
+    deleted_at: datetime | None
+
+
+class TournamentListResponse(BaseModel):
+    items: list[TournamentSummaryResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class AdminTournamentListResponse(BaseModel):
+    items: list[AdminTournamentResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class TournamentRegistrationListResponse(BaseModel):
+    items: list[TournamentRegistrationResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class UserTournamentRegistrationResponse(BaseModel):
+    registration: TournamentRegistrationResponse
+    tournament: TournamentSummaryResponse
+
+
+class UserTournamentRegistrationListResponse(BaseModel):
+    items: list[UserTournamentRegistrationResponse]
+    limit: int
+    offset: int
+    total: int
+
+
+class DeleteTournamentResponse(BaseModel):
+    deleted: bool

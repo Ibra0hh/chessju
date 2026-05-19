@@ -97,6 +97,13 @@ Local URLs:
 - `http://localhost:8001/version`
 - `http://localhost:8001/health/db`
 
+## Current Backend Scope
+
+Implemented backend foundations now include auth/users, admin audit logs, files, news,
+announcements, home content, time controls, tournaments, and tournament registration MVP behavior.
+Rounds, pairings, results, standings, leaderboard, PGN, Stockfish, Chess.com sync, chat, and
+frontend code are intentionally delayed.
+
 ## Notes
 
 The repository may contain old PocketBase files from early experimentation. They are not part of the approved ChessJU backend architecture and should not be used as the core backend.

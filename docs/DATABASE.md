@@ -37,3 +37,18 @@ and `deleted_at` for soft delete behavior.
 `announcements` stores draft, published, and archived club announcements with simple target,
 priority, expiration, and soft delete fields. `tournament_id` is nullable and intentionally has no
 foreign key until tournaments are implemented.
+
+Phase 5 tournament tables:
+
+- `time_controls`
+- `tournaments`
+- `tournament_registrations`
+
+`time_controls` stores reusable clock definitions such as rapid or blitz controls.
+
+`tournaments` stores the admin-managed tournament shell, including title, unique slug, status,
+format, optional time control, capacity, schedule, location, cover file, and soft delete timestamp.
+
+`tournament_registrations` stores each user registration with a unique `(tournament_id, user_id)`
+constraint. Registration statuses are `pending`, `approved`, `waitlisted`, `cancelled`, and
+`rejected`.

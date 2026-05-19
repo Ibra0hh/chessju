@@ -31,3 +31,13 @@ Phase 4 file and content rules:
 - Executable extensions are rejected
 - File metadata responses do not expose internal absolute filesystem paths
 - Article and announcement admin mutations create audit log entries with sanitized before/after data
+
+Phase 5 tournament security rules:
+
+- Tournament creation and lifecycle mutations require `admin` or `super_admin`
+- Registration requires an authenticated active user
+- Duplicate tournament registration is blocked by service checks and a database unique constraint
+- Capacity checks run inside the database transaction and lock the tournament row before counting
+  approved registrations
+- Admin tournament, time-control, and registration mutations write audit log entries
+- Public tournament endpoints hide draft and soft-deleted tournaments

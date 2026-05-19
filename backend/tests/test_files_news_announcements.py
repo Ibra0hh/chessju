@@ -418,7 +418,7 @@ def test_home_returns_stable_response_shape() -> None:
     }
     assert isinstance(body["announcements"], list)
     assert isinstance(body["latest_news"], list)
-    assert body["upcoming_tournaments"] == []
+    assert isinstance(body["upcoming_tournaments"], list)
     assert body["leaderboard_preview"] == []
 
 

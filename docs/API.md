@@ -54,3 +54,29 @@ Phase 4 content endpoints:
 Public news and announcements return only published, non-deleted content. The home endpoint returns
 stable Flutter-ready keys: `announcements`, `latest_news`, `upcoming_tournaments`, and
 `leaderboard_preview`.
+
+Phase 5 tournament endpoints:
+
+- `GET /api/v1/tournaments`
+- `GET /api/v1/tournaments/{slug}`
+- `POST /api/v1/tournaments/{tournament_id}/register`
+- `DELETE /api/v1/tournaments/{tournament_id}/registration`
+- `GET /api/v1/users/me/tournament-registrations`
+- `POST /api/v1/admin/time-controls`
+- `GET /api/v1/admin/time-controls`
+- `PATCH /api/v1/admin/time-controls/{time_control_id}`
+- `POST /api/v1/admin/tournaments`
+- `GET /api/v1/admin/tournaments`
+- `GET /api/v1/admin/tournaments/{tournament_id}`
+- `PATCH /api/v1/admin/tournaments/{tournament_id}`
+- `POST /api/v1/admin/tournaments/{tournament_id}/publish`
+- `POST /api/v1/admin/tournaments/{tournament_id}/open-registration`
+- `POST /api/v1/admin/tournaments/{tournament_id}/close-registration`
+- `POST /api/v1/admin/tournaments/{tournament_id}/cancel`
+- `DELETE /api/v1/admin/tournaments/{tournament_id}`
+- `GET /api/v1/admin/tournaments/{tournament_id}/registrations`
+- `PATCH /api/v1/admin/tournament-registrations/{registration_id}`
+
+Public tournament lists show non-deleted visible tournaments and support `limit`, `offset`, and
+`status`. Registration requires authentication and only works while tournament status is
+`registration_open`.
