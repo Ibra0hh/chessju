@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 
+from app.admin.router import router as admin_router
 from app.auth.router import router as auth_router
 from app.common.schemas import DatabaseHealthResponse, HealthResponse, VersionResponse
 from app.config import get_settings
@@ -16,6 +17,7 @@ app = FastAPI(
 
 app.include_router(auth_router, prefix=f"{settings.api_v1_prefix}/auth")
 app.include_router(users_router, prefix=settings.api_v1_prefix)
+app.include_router(admin_router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["operations"])

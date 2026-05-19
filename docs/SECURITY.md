@@ -13,3 +13,11 @@ Phase 2 auth foundation uses:
 - hashed refresh tokens
 - refresh token rotation
 - default `member`, `arbiter`, `admin`, and `super_admin` roles
+
+Phase 3 admin audit rules:
+
+- Admin endpoints require `admin` or `super_admin`
+- Future admin mutations must create an audit log
+- Audit logs must never store passwords, password hashes, refresh tokens, token hashes, JWTs, API
+  keys, authorization headers, or secrets
+- Audit payloads are sanitized before storage

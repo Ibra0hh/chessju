@@ -21,3 +21,11 @@ Phase 2 auth/user endpoints:
 - `PATCH /api/v1/users/me/profile`
 - `GET /api/v1/users/me/preferences`
 - `PATCH /api/v1/users/me/preferences`
+
+Phase 3 admin endpoints:
+
+- `GET /api/v1/admin/me`
+- `GET /api/v1/admin/audit-logs`
+
+Admin endpoints require an `admin` or `super_admin` role. Audit logs support `limit`, `offset`,
+`action`, `entity_type`, and `admin_id` query parameters and are sorted newest first.

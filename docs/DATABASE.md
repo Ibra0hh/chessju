@@ -14,3 +14,10 @@ Phase 2 auth/user tables:
 - `user_roles`
 - `user_preferences`
 - `refresh_tokens`
+
+Phase 3 admin tables:
+
+- `admin_action_logs`
+
+`admin_action_logs` records who performed an admin action, the action name, the entity type and
+optional entity ID, sanitized before/after snapshots, request metadata, and creation time.
