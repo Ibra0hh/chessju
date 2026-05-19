@@ -3,6 +3,86 @@
 These are manual verification flows for local development. Do not paste real secrets into commands
 or docs.
 
+## Local Demo Flow
+
+Use this flow when preparing a local release-candidate demo:
+
+1. Start the Docker stack.
+2. Run Alembic migrations.
+3. Seed local demo data.
+4. Run the backend smoke script.
+5. Run Flutter web.
+6. Login as the demo admin.
+7. Login as a demo member.
+8. Test tournament registration, rounds, pairings, and standings.
+9. Test PGN paste and analysis request/status.
+10. Test friends, direct chat, notifications, and unread count.
+11. Test the chess clock.
+
+```powershell
+docker compose -f infra/docker-compose.dev.yml up --build -d
+
+cd backend
+$env:CHESSJU_DATABASE_URL = "postgresql+psycopg://chessju:chessju_dev_password@localhost:5432/chessju"
+..\.venv\Scripts\alembic.exe upgrade head
+..\.venv\Scripts\python.exe scripts\seed_demo_data.py --yes --database-url $env:CHESSJU_DATABASE_URL
+..\.venv\Scripts\python.exe scripts\smoke_test_api.py `
+  --base-url http://localhost:8001 `
+  --member-email member4@example.com `
+  --member-password ChangeMe123! `
+  --friend-email member5@example.com `
+  --friend-password ChangeMe123! `
+  --admin-email admin@example.com `
+  --admin-password ChangeMe123!
+
+cd ..\frontend\chessju_app
+flutter run -d chrome --dart-define=CHESSJU_API_BASE_URL=http://localhost:8001
+```
+
+The demo credentials above are for local development only:
+
+- Admin: `admin@example.com` / `ChangeMe123!`
+- Members: `member1@example.com` through `member5@example.com` / `ChangeMe123!`
+
+Do not use these credentials in production, staging, or any public environment.
+
+## Demo Seed Script
+
+`backend/scripts/seed_demo_data.py` creates repeatable local demo data:
+
+- one admin/super admin account
+- five member accounts
+- profiles, preferences, and notification preferences
+- published news and announcement content
+- a rapid time control
+- a demo tournament with registrations, rounds, pairings, results, and leaderboard data
+- one PGN-upload-style game
+- a friendship, direct conversation, and sample messages
+
+Safety rules:
+
+- The script requires `--yes`.
+- The script only runs when `CHESSJU_ENVIRONMENT` is `development`, `local`, or `test`.
+- The script does not run automatically.
+- The script does not create a hidden admin endpoint.
+- The script is idempotent for the seeded demo records.
+
+When running from the Windows host against Docker PostgreSQL, pass the localhost database URL shown
+above. Inside a Docker container, the normal Docker service hostname can be used through
+`CHESSJU_DATABASE_URL`.
+
+## Automated API Smoke Script
+
+`backend/scripts/smoke_test_api.py` verifies a running local API and prints pass/fail results. It
+does not print access tokens, refresh tokens, passwords, token hashes, or authorization headers.
+
+The script checks health endpoints, auth, public content, tournament lists, leaderboard, PGN paste,
+analysis request creation, clock events, friend request/direct message flow, notification unread
+count, and admin identity/audit logs when admin credentials are provided.
+
+Admin sections are skipped when admin credentials are omitted. Existing friend relationships are
+handled as a non-failing skip so the script can be run repeatedly against seeded data.
+
 ## 1. Health Checks
 
 ```powershell
@@ -32,8 +112,11 @@ Authorization: Bearer <access_token>
 
 ## 3. Create A Dev Admin
 
-There is no hardcoded admin user. For local-only testing, register a normal user, then assign the
-admin role with a manual SQL update against the local database.
+There is no hidden admin creation endpoint. Use one of these local-only methods:
+
+- Run `backend/scripts/seed_demo_data.py` to create `admin@example.com`.
+- Register a normal user, then assign the admin role with a manual SQL update against the local
+  database.
 
 Example outline:
 

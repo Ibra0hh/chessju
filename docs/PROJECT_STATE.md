@@ -8,8 +8,9 @@ Checkpoint date: 2026-05-19
 - Owner: Ibrahim
 - Purpose: custom chess club platform for University of Jordan members
 
-ChessJU now has a backend MVP foundation and an initial Flutter/Dart app foundation. The Flutter
-client is intentionally simple and focused on connecting cleanly to the existing backend.
+ChessJU now has a backend MVP foundation, a Flutter/Dart app foundation, and release-candidate QA
+tooling for local demos and repeatable smoke checks. The Flutter client is intentionally practical
+and focused on connecting cleanly to the existing backend.
 
 ## Architecture
 
@@ -362,6 +363,32 @@ client is intentionally simple and focused on connecting cleanly to the existing
   overwrite control
 - The pairing engine is practical ChessJU logic and is not FIDE-certified
 
+### Phase 22: End-To-End QA, Demo Data, And Release-Candidate Cleanup
+
+- Local-only demo seed script under `backend/scripts/seed_demo_data.py`
+- Demo seed creates:
+  - one admin/super admin account
+  - five member accounts
+  - profiles, preferences, and notification preferences
+  - news and announcement demo content
+  - time control data
+  - a demo tournament with registrations, rounds, pairings, results, and leaderboard data
+  - one PGN-upload-style game
+  - a friendship, direct conversation, and sample messages
+- Demo seed refuses production environments and requires explicit `--yes`
+- Local demo credentials are documented as development-only:
+  - `admin@example.com` / `ChangeMe123!`
+  - `member1@example.com` through `member5@example.com` / `ChangeMe123!`
+- Local API smoke script under `backend/scripts/smoke_test_api.py`
+- Smoke script checks health, auth, public content, leaderboard, PGN paste, analysis request,
+  clock events, friend/direct-message flow, notifications, and admin identity/audit logs when admin
+  credentials are provided
+- Smoke script redacts tokens, passwords, token hashes, and authorization headers
+- Smoke script supports seeded demo credentials and can be rerun against existing friend data
+- Documentation now includes a local demo flow from Docker startup through Flutter web manual QA
+- No production deployment, external object storage, push notifications, or architecture changes
+  were added in this phase
+
 ## Current Database State
 
 Current Alembic head:
@@ -451,6 +478,7 @@ Endpoint groups currently implemented:
 - Flutter friends, blocks, conversations, and direct text message UI
 - Flutter admin dashboard, tournament manager, leaderboard recompute, and audit log UI
 - Flutter admin automatic pairing controls
+- Local demo seed and API smoke-test scripts for release-candidate QA
 
 ## Current Worker And Queue State
 
@@ -477,8 +505,9 @@ Endpoint groups currently implemented:
   - `flutter_secure_storage`
   - `shared_preferences`
   - `uuid`
-- Flutter analyze: passed at Phase 21 implementation time
-- Flutter test: passed at Phase 21 implementation time
+- Flutter analyze: passed at Phase 22 verification time
+- Flutter test: passed at Phase 22 verification time
+- Release-candidate backend smoke script can verify seeded API flows before Flutter manual testing
 - Current vertical slice consumes:
   - `/api/v1/home`
   - `/api/v1/news`
@@ -554,7 +583,7 @@ Endpoint groups currently implemented:
 
 Latest known verification at this checkpoint:
 
-- pytest: `319 passed`
+- pytest: `322 passed`
 - Ruff: passed
 - Alembic current head: `0013_realtime_notifications`
 - Flutter analyze: passed
@@ -569,9 +598,9 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest completed Phase 20 commit before Phase 21:
-  `3d67c4a3b6cdd818951ec102bff8266d9e5d9adf`
-- Git status before Phase 21 implementation: clean
+- Latest completed Phase 21 commit before Phase 22:
+  `c70fc635bdda00457832224a54087d19f15f8120`
+- Git status before Phase 22 implementation: clean
 
 ## Important Permanent Rules
 
@@ -600,6 +629,8 @@ Latest known verification at this checkpoint:
 - Rate limits should protect expensive and abuse-prone endpoints.
 - Do not commit secrets.
 - Do not commit `.env`.
+- Demo seed credentials are local-only and must never be treated as production credentials.
+- Demo seeding must remain explicit and dev-only.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.
 - Flutter must treat backend REST responses as authoritative.
 - Flutter must refetch official state after realtime hints.
@@ -646,6 +677,7 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
+- Production deployment preparation, only after Ibrahim approves moving beyond release-candidate QA.
 - Add Chess.com import UI, PGN file upload UI, admin UI polish, or SSE-driven social refresh after
   Ibrahim chooses the next product slice.
 - Add PGN file upload, engine arrows, and an evaluation graph as later game-review refinements.

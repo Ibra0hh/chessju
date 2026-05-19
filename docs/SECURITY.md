@@ -243,6 +243,20 @@ Phase 14 backend hardening rules:
 - `/health/valkey` checks Valkey readiness
 - OpenAPI tags are organized by backend domain for easier Flutter integration
 
+Phase 22 release-candidate QA tooling rules:
+
+- Demo seeding is explicitly local/dev/test only and refuses production environments
+- Demo seeding requires an explicit `--yes` confirmation
+- Demo users use obvious local-only credentials and must not be used in production or public
+  environments
+- ChessJU does not expose a hidden admin creation endpoint
+- Local admin bootstrapping should happen through the dev seed script or a documented local SQL role
+  assignment
+- API smoke tooling must not print access tokens, refresh tokens, passwords, password hashes, token
+  hashes, or authorization headers
+- Smoke tests should use mocked or skipped behavior for external services rather than depending on
+  live Chess.com network access
+
 Security review notes:
 
 - `.env` remains ignored and must not be committed

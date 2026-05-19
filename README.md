@@ -85,6 +85,42 @@ alembic upgrade head
 Local uploads are controlled by `CHESSJU_LOCAL_STORAGE_ROOT`. In Docker development this points to
 `/data/storage` inside the API container and is backed by a Docker volume.
 
+## Local Demo And Release-Candidate Smoke
+
+Phase 22 adds local-only demo data and repeatable smoke checks for release-candidate QA. These tools
+are for development only and must not be used to create production credentials.
+
+Seed demo data after starting Docker and running migrations:
+
+```powershell
+cd backend
+$env:CHESSJU_DATABASE_URL = "postgresql+psycopg://chessju:chessju_dev_password@localhost:5432/chessju"
+..\.venv\Scripts\alembic.exe upgrade head
+..\.venv\Scripts\python.exe scripts\seed_demo_data.py --yes --database-url $env:CHESSJU_DATABASE_URL
+```
+
+Seeded local demo accounts:
+
+- `admin@example.com` / `ChangeMe123!`
+- `member1@example.com` through `member5@example.com` / `ChangeMe123!`
+
+Run the local API smoke script against the seeded data:
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe scripts\smoke_test_api.py `
+  --base-url http://localhost:8001 `
+  --member-email member4@example.com `
+  --member-password ChangeMe123! `
+  --friend-email member5@example.com `
+  --friend-password ChangeMe123! `
+  --admin-email admin@example.com `
+  --admin-password ChangeMe123!
+```
+
+The smoke script avoids printing tokens or passwords and returns a nonzero exit code for critical
+failures. See `docs/SMOKE_TESTS.md` for the full local demo flow.
+
 Stockfish analysis settings:
 
 - `CHESSJU_STOCKFISH_PATH`
@@ -193,8 +229,9 @@ slice with API client, auth flow, responsive app shell, home/news/tournament/lea
 notification/profile screens, game detail replay, PGN paste import, analysis report viewing, a
 casual chess clock UI that stores meaningful backend events without sending every tick,
 friends/direct chat screens for requests, blocks, conversations, and text messages, and an admin
-tournament manager button for Swiss/Round Robin pairing generation. Advanced tie-breaks, Lichess
-import, scheduled sync, group chat, tournament chat, media
+tournament manager button for Swiss/Round Robin pairing generation, plus local release-candidate
+demo seeding and API smoke-test tooling. Advanced tie-breaks, Lichess import, scheduled sync, group
+chat, tournament chat, media
 messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, PGN file
 upload UI, user search/discovery UI, admin player picker/search, drag/drop pairing UI,
 SSE-driven chat refresh, engine arrows, evaluation graph behavior, FIDE-certified pairing, advanced

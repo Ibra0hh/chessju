@@ -9,6 +9,20 @@ flutter pub get
 flutter run -d chrome --dart-define=CHESSJU_API_BASE_URL=http://localhost:8001
 ```
 
+For a local release-candidate demo, seed the backend first from the monorepo `backend/` directory:
+
+```powershell
+$env:CHESSJU_DATABASE_URL = "postgresql+psycopg://chessju:chessju_dev_password@localhost:5432/chessju"
+..\.venv\Scripts\python.exe scripts\seed_demo_data.py --yes --database-url $env:CHESSJU_DATABASE_URL
+```
+
+Local-only demo logins:
+
+- `admin@example.com` / `ChangeMe123!`
+- `member1@example.com` through `member5@example.com` / `ChangeMe123!`
+
+Do not use these credentials outside local development.
+
 Android emulator uses the host alias:
 
 ```powershell
@@ -45,6 +59,8 @@ Current vertical slice:
 - Admin dashboard foundation with content management, tournament manager, leaderboard recompute,
   audit logs, and read-only operational lists
 - Admin tournament manager automatic Swiss/Round Robin pairing generation for selected rounds
+- Seeded demo data and backend smoke script support release-candidate QA before Flutter manual
+  testing
 
 Current game-review limitations:
 

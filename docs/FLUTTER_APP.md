@@ -46,6 +46,21 @@ flutter pub get
 flutter run -d chrome --dart-define=CHESSJU_API_BASE_URL=http://localhost:8001
 ```
 
+For a seeded local demo, first run the backend demo seed from `backend/`:
+
+```powershell
+$env:CHESSJU_DATABASE_URL = "postgresql+psycopg://chessju:chessju_dev_password@localhost:5432/chessju"
+..\.venv\Scripts\python.exe scripts\seed_demo_data.py --yes --database-url $env:CHESSJU_DATABASE_URL
+```
+
+Then login in Flutter with local-only demo credentials:
+
+- Admin: `admin@example.com` / `ChangeMe123!`
+- Member: `member1@example.com` / `ChangeMe123!`
+
+These credentials are generated only for local development. Do not use them in production or public
+environments.
+
 ## Checks
 
 ```powershell
@@ -63,7 +78,7 @@ verification.
 
 ## Current App Foundation
 
-Implemented in Phases 15-20:
+Implemented in Phases 15-22:
 
 - Flutter project scaffold for Android, iOS, Web, and Windows desktop
 - iOS project files are included, but iOS build/signing/release must be verified on macOS with Xcode
@@ -108,6 +123,8 @@ Implemented in Phases 15-20:
   read-only operational lists
 - Tournament manager UI for registrations, rounds, manual pairings, automatic pairing generation,
   result submission, and standings
+- Release-candidate demo flow documented for Flutter web against seeded backend data
+- Backend smoke script available to verify API flows before opening the Flutter app
 
 ## Auth Flow
 
@@ -368,6 +385,30 @@ Still placeholder or future UI work:
 - Evaluation graph
 - Sound/vibration cues for chess clock
 - Offline clock mode
+
+## Release-Candidate QA Notes
+
+Before manual Flutter QA, run:
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe scripts\smoke_test_api.py `
+  --base-url http://localhost:8001 `
+  --member-email member4@example.com `
+  --member-password ChangeMe123! `
+  --friend-email member5@example.com `
+  --friend-password ChangeMe123! `
+  --admin-email admin@example.com `
+  --admin-password ChangeMe123!
+```
+
+Then verify these Flutter screens load with seeded data:
+
+- Home, news, tournaments, and leaderboard
+- Games list and PGN paste/game detail
+- Clock create/start/switch/complete and event history
+- Friends, conversations, message send, and notifications
+- Admin dashboard, tournament manager, pairing generation, leaderboard recompute, and audit logs
 
 ## Recommended Next Flutter Phase
 
