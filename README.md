@@ -122,6 +122,15 @@ Friends and direct chat backend:
 - Direct conversations require friendship and are text-only in this phase.
 - Message deletion is soft deletion, and deleted message bodies are hidden from normal responses.
 
+Realtime and in-app notifications:
+
+- Users can list notifications, mark them read, and manage notification preferences.
+- Friend requests, accepted requests, direct messages, analysis completion/failure, and Chess.com
+  sync completion/failure can create in-app notifications.
+- Published news and announcements create lightweight broadcast realtime events.
+- `GET /api/v1/realtime/stream` provides authenticated SSE events for user-targeted updates.
+- SSE payloads are small hints; Flutter clients should refetch REST resources for full state.
+
 Chesskit may be used only as a conceptual reference for common chess-review ideas. Do not copy its
 AGPL-3.0 code, UI layout, assets, names, branding, files, or exact wording into ChessJU.
 
@@ -146,9 +155,10 @@ standings, the global JU leaderboard, PGN paste/upload, normalized game moves, a
 library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
 Stockfish analysis jobs through the worker, Chess.com public game import, and chess clock sessions
 with append-only event logs, friends, blocking, direct conversations, direct text messages, and
-admin chat moderation listing. Frontend code, automatic pairing, advanced tie-breaks, Lichess
-import, scheduled sync, group chat, tournament chat, media messages, push notifications, full
-realtime chat delivery, and advanced game review behavior are intentionally delayed.
+admin chat moderation listing, in-app notifications, and authenticated SSE events. Frontend code,
+automatic pairing, advanced tie-breaks, Lichess import, scheduled sync, group chat, tournament chat,
+media messages, push notifications, full WebSocket chat, guaranteed distributed event delivery, and
+advanced game review behavior are intentionally delayed.
 
 ## Notes
 

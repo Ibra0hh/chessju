@@ -24,6 +24,7 @@ from app.news.schemas import (
     ArticleUpdateRequest,
     HomeResponse,
 )
+from app.notifications.services import create_broadcast_realtime_event
 
 SLUG_NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
@@ -288,6 +289,12 @@ async def publish_article(
         ip_address=ip_address,
         user_agent=user_agent,
     )
+    await create_broadcast_realtime_event(
+        session,
+        channel="news",
+        event_type="news.published",
+        payload={"article_id": article.id, "slug": article.slug},
+    )
     await session.commit()
     await session.refresh(article)
     return ArticleResponse.model_validate(article)
@@ -422,6 +429,13 @@ async def create_announcement(
         ip_address=ip_address,
         user_agent=user_agent,
     )
+    if announcement.status == "published":
+        await create_broadcast_realtime_event(
+            session,
+            channel="announcements",
+            event_type="announcement.published",
+            payload={"announcement_id": announcement.id, "target": announcement.target},
+        )
     await session.commit()
     await session.refresh(announcement)
     return AnnouncementResponse.model_validate(announcement)
@@ -480,6 +494,12 @@ async def publish_announcement(
         after=announcement_audit_snapshot(announcement),
         ip_address=ip_address,
         user_agent=user_agent,
+    )
+    await create_broadcast_realtime_event(
+        session,
+        channel="announcements",
+        event_type="announcement.published",
+        payload={"announcement_id": announcement.id, "target": announcement.target},
     )
     await session.commit()
     await session.refresh(announcement)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import aliased, selectinload
 from app.admin.services import create_admin_action_log
 from app.auth.constants import ADMIN_ROLE_NAMES
 from app.common.time import utc_now
+from app.notifications.services import create_user_notification
 from app.social.models import (
     BlockedUser,
     Conversation,
@@ -199,6 +200,15 @@ async def send_friend_request(
             existing.status = PENDING_REQUEST_STATUS
             existing.created_at = now
             existing.responded_at = None
+            await session.flush()
+            await create_user_notification(
+                session,
+                user_id=payload.receiver_id,
+                notification_type="friend_request.received",
+                title="New friend request",
+                body="You have a new friend request",
+                data={"friend_request_id": existing.id, "sender_id": user.id},
+            )
             await session.commit()
             await session.refresh(existing)
             return await _friend_request_response(session, existing)
@@ -215,6 +225,14 @@ async def send_friend_request(
         opposite.status = "accepted"
         opposite.responded_at = now
         await _ensure_friendship(session, user.id, payload.receiver_id)
+        await create_user_notification(
+            session,
+            user_id=payload.receiver_id,
+            notification_type="friend_request.accepted",
+            title="Friend request accepted",
+            body="Your friend request was accepted",
+            data={"friend_request_id": opposite.id, "friend_id": user.id},
+        )
         await session.commit()
         await session.refresh(opposite)
         return await _friend_request_response(session, opposite)
@@ -222,6 +240,15 @@ async def send_friend_request(
     friend_request = FriendRequest(sender_id=user.id, receiver_id=payload.receiver_id)
     session.add(friend_request)
     try:
+        await session.flush()
+        await create_user_notification(
+            session,
+            user_id=payload.receiver_id,
+            notification_type="friend_request.received",
+            title="New friend request",
+            body="You have a new friend request",
+            data={"friend_request_id": friend_request.id, "sender_id": user.id},
+        )
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
@@ -308,6 +335,14 @@ async def accept_friend_request(
     friend_request.status = "accepted"
     friend_request.responded_at = utc_now()
     await _ensure_friendship(session, friend_request.sender_id, friend_request.receiver_id)
+    await create_user_notification(
+        session,
+        user_id=friend_request.sender_id,
+        notification_type="friend_request.accepted",
+        title="Friend request accepted",
+        body="Your friend request was accepted",
+        data={"friend_request_id": friend_request.id, "friend_id": user.id},
+    )
     await session.commit()
     await session.refresh(friend_request)
     return await _friend_request_response(session, friend_request)
@@ -702,6 +737,20 @@ async def send_message(
     message = Message(conversation_id=conversation_id, sender_id=user.id, body=payload.body)
     conversation.updated_at = utc_now()
     session.add(message)
+    await session.flush()
+    for other_user_id in other_member_ids:
+        await create_user_notification(
+            session,
+            user_id=other_user_id,
+            notification_type="message.received",
+            title="New message",
+            body="You have a new message",
+            data={
+                "conversation_id": conversation_id,
+                "message_id": message.id,
+                "sender_id": user.id,
+            },
+        )
     await session.commit()
     await session.refresh(message)
     return await _message_response(session, message)

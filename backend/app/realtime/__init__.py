@@ -1,1 +1,1 @@
-"""Realtime event module."""
+"""Lightweight realtime event domain."""

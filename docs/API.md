@@ -268,3 +268,31 @@ Admin chat endpoints are read-only except message deletion through `DELETE /api/
 When an admin deletes another user's message, ChessJU writes `message.admin_deleted` to the admin
 audit log. Full realtime chat, group chat, tournament chat, media messages, and push notifications
 are intentionally not implemented in Phase 12.
+
+Phase 13 realtime and notification endpoints:
+
+- `GET /api/v1/notifications`
+- `GET /api/v1/notifications/unread-count`
+- `POST /api/v1/notifications/{notification_id}/read`
+- `POST /api/v1/notifications/read-all`
+- `GET /api/v1/notifications/preferences`
+- `PATCH /api/v1/notifications/preferences`
+- `GET /api/v1/realtime/stream`
+- `GET /api/v1/admin/notifications`
+- `GET /api/v1/admin/realtime/events`
+
+Notifications are authenticated and user-scoped. Users can list their own notifications, get an
+unread count, mark one notification as read, mark all notifications as read, and update notification
+preferences. Admin and super admin users can list notifications for support and moderation.
+
+The SSE endpoint is authenticated and streams lightweight user-targeted realtime events from the
+PostgreSQL-backed `realtime_events` outbox. Events are intentionally small; Flutter clients should
+refetch full state after important events instead of treating SSE payloads as authoritative state.
+The stream sends heartbeat comments and supports `Last-Event-ID` when it matches an event owned by
+the current user.
+
+Phase 13 currently emits notifications/realtime events for friend requests, accepted friend
+requests, direct messages, analysis completion/failure, Chess.com sync completion/failure, and
+broadcast realtime events for published news and announcements. Mobile push notifications, email,
+full WebSocket chat, group chat realtime, tournament chat realtime, and guaranteed distributed event
+delivery are intentionally delayed.

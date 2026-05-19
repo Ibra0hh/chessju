@@ -204,3 +204,23 @@ bodies remain in PostgreSQL for moderation context but normal API responses retu
 
 `message_reads` stores per-message read timestamps for each user. Phase 12 uses a simple
 conversation read operation that marks current conversation messages as read for the current user.
+
+Phase 13 realtime and notification tables:
+
+- `notifications`
+- `notification_preferences`
+- `realtime_events`
+
+`notifications` stores user-targeted in-app notifications with type, title, optional body, safe JSON
+data, read timestamp, and creation time. Notification payloads must not contain secrets, tokens,
+password hashes, raw PGN, or unnecessary message body content.
+
+`notification_preferences` stores per-user opt-in flags for in-app notifications, tournament
+updates, friend requests, chat messages, analysis updates, Chess.com sync updates, and
+news/announcements. New registrations create a preferences row, and existing users get one lazily
+when preferences are read or notification delivery needs it.
+
+`realtime_events` is a lightweight PostgreSQL-backed outbox for SSE delivery. Rows can target a
+specific user or a broadcast channel such as `news` or `announcements`. Phase 13 uses it for
+lightweight event notices, not guaranteed distributed streaming. Clients should refetch full state
+after receiving most events.

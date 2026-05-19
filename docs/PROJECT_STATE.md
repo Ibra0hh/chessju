@@ -179,11 +179,27 @@ ChessJU is backend-first right now. Flutter/Dart mobile, web, and admin clients 
 - Admin social/chat listing endpoints
 - Admin message moderation audit log action
 
+### Phase 13: Realtime Events And In-App Notifications
+
+- In-app notifications
+- Notification preferences
+- Unread notification counts
+- Mark-one and mark-all read behavior
+- PostgreSQL-backed realtime event outbox
+- Authenticated SSE stream endpoint
+- Admin notification listing
+- Admin realtime event listing
+- Friend request notification integration
+- Direct message notification integration
+- Analysis completed/failed notification integration
+- Chess.com sync completed/failed notification integration
+- Broadcast realtime events for published news and announcements
+
 ## Current Database State
 
 Current Alembic head:
 
-- `0012_friends_direct_chat`
+- `0013_realtime_notifications`
 
 Main database tables:
 
@@ -224,6 +240,9 @@ Main database tables:
 - `conversation_members`
 - `messages`
 - `message_reads`
+- `notifications`
+- `notification_preferences`
+- `realtime_events`
 
 ## Current API State
 
@@ -252,6 +271,9 @@ Endpoint groups currently implemented:
 - Chess clock session and event endpoints
 - Friends, blocks, direct conversation, and message endpoints
 - Admin social/chat moderation listing endpoints
+- Notification and notification preference endpoints
+- Authenticated SSE realtime stream endpoint
+- Admin notification and realtime event listing endpoints
 
 ## Current Worker And Queue State
 
@@ -267,9 +289,9 @@ Endpoint groups currently implemented:
 
 Latest known verification at this checkpoint:
 
-- pytest: `275 passed`
+- pytest: `296 passed`
 - Ruff: passed
-- Alembic current head: `0012_friends_direct_chat`
+- Alembic current head: `0013_realtime_notifications`
 - Docker stack status:
   - API running on `http://localhost:8001`
   - PostgreSQL running and healthy
@@ -280,8 +302,8 @@ Latest known verification at this checkpoint:
 
 - Repository: https://github.com/Ibra0hh/chessju
 - Branch: `main`
-- Latest Phase 11 commit: `77ca75beaf42d8d17db8e2ed17e1b9720b7f21c8`
-- Git status before Phase 12 implementation: clean
+- Latest completed Phase 12 commit before Phase 13: `d408764d99b8a0169063fcd56751602e6163169c`
+- Git status before Phase 13 implementation: clean
 
 ## Important Permanent Rules
 
@@ -299,6 +321,8 @@ Latest known verification at this checkpoint:
 - Chess clock clients should send meaningful event snapshots only, not every tick.
 - Direct chat is member-only and text-only in Phase 12.
 - Message deletion must be soft deletion.
+- In-app notification payloads must not contain secrets, raw PGN, or unnecessary message bodies.
+- SSE events are lightweight hints; REST endpoints remain authoritative.
 - Do not commit secrets.
 - Do not commit `.env`.
 - Do not use Firebase, Supabase, Appwrite, PocketBase, or any BaaS as the core backend.
@@ -312,6 +336,9 @@ Latest known verification at this checkpoint:
 - Production monitoring stack
 - External object storage
 - Push notifications
+- Email notifications
+- Full WebSocket chat
+- Guaranteed distributed event delivery
 - Scheduled Chess.com sync
 - Realtime clock broadcast
 - Player-controlled official tournament clocks
@@ -319,8 +346,6 @@ Latest known verification at this checkpoint:
 - Group chat
 - Tournament chat
 - Media messages
-- Push notifications for chat
-- Full realtime chat delivery
 - End-to-end encrypted direct messages
 
 ## Recommended Next Phase
@@ -329,6 +354,6 @@ Recommended next phase should be approved explicitly before work starts.
 
 Candidate next areas:
 
-- SSE/realtime hardening if tournament, analysis, and clock update delivery should be improved first.
-- Group or tournament chat if Ibrahim wants to extend social features beyond direct messages.
 - Flutter client planning if the backend MVP should be exercised from the future app surface.
+- Group or tournament chat if Ibrahim wants to extend social features beyond direct messages.
+- Automatic pairing if tournament operations should move beyond manual pairing.

@@ -18,8 +18,11 @@ from app.database import AsyncSessionLocal
 from app.files import models as files_models  # noqa: F401
 from app.leaderboard import models as leaderboard_models  # noqa: F401
 from app.news import models as news_models  # noqa: F401
+from app.notifications import models as notification_models  # noqa: F401
+from app.notifications.services import create_user_notification
 from app.pgn import models as pgn_models  # noqa: F401
 from app.pgn.services import create_game_from_parsed_pgn, parse_pgn_text
+from app.realtime import models as realtime_models  # noqa: F401
 from app.tournaments import models as tournaments_models  # noqa: F401
 from app.users import models as users_models  # noqa: F401
 
@@ -68,6 +71,14 @@ async def _mark_failed(session: AsyncSession, sync_job_id: uuid.UUID, exc: Excep
     job.status = "failed"
     job.error_message = safe_error_message(exc)
     job.completed_at = utc_now()
+    await create_user_notification(
+        session,
+        user_id=job.user_id,
+        notification_type="chesscom.sync_failed",
+        title="Chess.com sync failed",
+        body="Chess.com game sync could not be completed",
+        data={"sync_job_id": job.id},
+    )
     await session.commit()
 
 
@@ -164,6 +175,7 @@ async def run_chesscom_sync_job_async(
             account = await session.get(ChessComAccount, job.chesscom_account_id)
             if account is None or account.disconnected_at is not None:
                 raise ValueError("Chess.com account is not connected")
+            account_id = account.id
 
             client = api_client or ChessComApiClient()
             archives = await client.fetch_archives(account.username)
@@ -182,6 +194,10 @@ async def run_chesscom_sync_job_async(
                     else:
                         games_skipped += 1
 
+            job = await _load_sync_job(session, sync_job_id)
+            account = await session.get(ChessComAccount, account_id)
+            if job is None or account is None:
+                return
             job.games_found = games_found
             job.games_imported = games_imported
             job.games_skipped = games_skipped
@@ -189,6 +205,19 @@ async def run_chesscom_sync_job_async(
             job.completed_at = utc_now()
             job.error_message = None
             account.last_synced_at = utc_now()
+            await create_user_notification(
+                session,
+                user_id=job.user_id,
+                notification_type="chesscom.sync_completed",
+                title="Chess.com sync completed",
+                body="Chess.com game sync completed",
+                data={
+                    "sync_job_id": job.id,
+                    "games_found": games_found,
+                    "games_imported": games_imported,
+                    "games_skipped": games_skipped,
+                },
+            )
             await session.commit()
     except Exception as exc:
         async with AsyncSessionLocal() as session:

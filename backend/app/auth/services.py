@@ -17,6 +17,7 @@ from app.auth.security import (
 )
 from app.common.time import utc_now
 from app.config import get_settings
+from app.notifications.models import NotificationPreference
 from app.users.models import Profile, RefreshToken, User, UserPreferences
 from app.users.services import (
     build_current_user_response,
@@ -124,8 +125,9 @@ async def register_user(
             chesscom_username=payload.chesscom_username,
         )
         preferences = UserPreferences(user_id=user.id)
+        notification_preferences = NotificationPreference(user_id=user.id)
         user_role = UserRole(user_id=user.id, role_id=member_role.id)
-        session.add_all([profile, preferences, user_role])
+        session.add_all([profile, preferences, notification_preferences, user_role])
         await session.flush()
 
         tokens = await _create_token_response(session, user, user_agent, ip_address)

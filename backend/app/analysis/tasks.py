@@ -24,7 +24,10 @@ from app.files import models as files_models  # noqa: F401
 from app.games.models import GameMove
 from app.leaderboard import models as leaderboard_models  # noqa: F401
 from app.news import models as news_models  # noqa: F401
+from app.notifications import models as notification_models  # noqa: F401
+from app.notifications.services import create_user_notification
 from app.pgn import models as pgn_models  # noqa: F401
+from app.realtime import models as realtime_models  # noqa: F401
 from app.tournaments import models as tournaments_models  # noqa: F401
 from app.users import models as users_models  # noqa: F401
 
@@ -91,6 +94,14 @@ async def _mark_failed(session: AsyncSession, job_id: uuid.UUID, exc: Exception)
     job.status = "failed"
     job.error_message = _safe_error_message(exc)
     job.completed_at = utc_now()
+    await create_user_notification(
+        session,
+        user_id=job.requested_by,
+        notification_type="analysis.failed",
+        title="Analysis failed",
+        body="Game analysis could not be completed",
+        data={"analysis_job_id": job.id, "game_id": job.game_id},
+    )
     await session.commit()
 
 
@@ -146,6 +157,14 @@ async def _store_report(
     job.engine_version = engine_version
     job.completed_at = utc_now()
     job.error_message = None
+    await create_user_notification(
+        session,
+        user_id=job.requested_by,
+        notification_type="analysis.completed",
+        title="Analysis completed",
+        body="Your game analysis is ready",
+        data={"analysis_job_id": job.id, "game_id": job.game_id, "analysis_report_id": report.id},
+    )
     await session.commit()
 
 

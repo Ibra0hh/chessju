@@ -188,3 +188,27 @@ Not implemented yet:
 - push notifications
 - full realtime chat delivery
 - end-to-end encryption
+
+Phase 13 realtime and notification security rules:
+
+- Notification endpoints require authentication
+- Users can list, read, and update only their own notifications and notification preferences
+- Admin and super admin users can list notifications and realtime events for support/moderation
+- User-targeted SSE streams return only events owned by the authenticated user
+- SSE payloads are lightweight hints; clients must refetch authoritative state from REST endpoints
+- Notification data is sanitized before storage
+- Notification data must never include passwords, password hashes, refresh tokens, token hashes,
+  JWTs, authorization headers, API keys, secrets, raw PGN, or unnecessary message body content
+- Message notifications include safe IDs such as `conversation_id` and `message_id`, not the message
+  body
+- Notification failures should not break the primary business action unless the transaction itself
+  fails
+
+Not implemented yet:
+
+- mobile push notifications
+- email notifications
+- full WebSocket chat
+- group chat realtime
+- tournament chat realtime
+- guaranteed distributed event delivery
