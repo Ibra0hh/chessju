@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile, status
@@ -42,8 +43,9 @@ ALLOWED_UPLOADS: dict[str, dict[str, set[str]]] = {
         "image/webp": {".webp"},
     },
     "pgn": {
-        "application/x-chess-pgn": {".pgn"},
-        "text/plain": {".pgn"},
+        "application/octet-stream": {".pgn", ".txt"},
+        "application/x-chess-pgn": {".pgn", ".txt"},
+        "text/plain": {".pgn", ".txt"},
     },
     "export": {
         "application/pdf": {".pdf"},
@@ -55,6 +57,14 @@ ALLOWED_UPLOADS: dict[str, dict[str, set[str]]] = {
         "text/plain": {".txt"},
     },
 }
+
+
+@dataclass(frozen=True)
+class ValidatedUpload:
+    original_filename: str
+    mime_type: str
+    extension: str
+    data: bytes
 
 
 def safe_original_filename(filename: str | None) -> str:
@@ -92,13 +102,13 @@ def _validate_extension_and_mime(
     return extension
 
 
-async def _read_limited_upload(upload: UploadFile) -> bytes:
-    data = await upload.read(MAX_UPLOAD_BYTES + 1)
+async def _read_limited_upload(upload: UploadFile, max_bytes: int = MAX_UPLOAD_BYTES) -> bytes:
+    data = await upload.read(max_bytes + 1)
     if not data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload is empty")
-    if len(data) > MAX_UPLOAD_BYTES:
+    if len(data) > max_bytes:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="File too large",
         )
     return data
@@ -115,6 +125,61 @@ async def _remove_file(path: Path) -> None:
             path.unlink()
 
     await asyncio.to_thread(remove)
+
+
+async def remove_stored_file(record: FileRecord) -> None:
+    storage_root = Path(get_settings().local_storage_root)
+    await _remove_file(storage_root / record.storage_path)
+
+
+async def read_validated_upload(
+    file_type: FileType,
+    upload: UploadFile,
+    max_bytes: int = MAX_UPLOAD_BYTES,
+) -> ValidatedUpload:
+    _validate_file_type(file_type)
+    original_filename = safe_original_filename(upload.filename)
+    mime_type = upload.content_type or ""
+    extension = _validate_extension_and_mime(original_filename, mime_type, file_type)
+    data = await _read_limited_upload(upload, max_bytes=max_bytes)
+    return ValidatedUpload(
+        original_filename=original_filename,
+        mime_type=mime_type,
+        extension=extension,
+        data=data,
+    )
+
+
+async def create_file_record_from_validated_upload(
+    session: AsyncSession,
+    owner_id: uuid.UUID | None,
+    file_type: FileType,
+    upload: ValidatedUpload,
+) -> FileRecord:
+    settings = get_settings()
+    storage_root = Path(settings.local_storage_root)
+    storage_name = f"{uuid.uuid4()}{upload.extension}"
+    relative_path = Path(file_type) / storage_name
+    absolute_path = storage_root / relative_path
+    checksum = hashlib.sha256(upload.data).hexdigest()
+    try:
+        await asyncio.to_thread(_write_bytes, absolute_path, upload.data)
+        record = FileRecord(
+            owner_id=owner_id,
+            file_type=file_type,
+            storage_provider="local",
+            storage_path=relative_path.as_posix(),
+            original_filename=upload.original_filename,
+            mime_type=upload.mime_type,
+            size_bytes=len(upload.data),
+            checksum=checksum,
+        )
+        session.add(record)
+        await session.flush()
+        return record
+    except Exception:
+        await _remove_file(absolute_path)
+        raise
 
 
 def file_record_audit_snapshot(record: FileRecord) -> dict[str, object]:
@@ -139,34 +204,16 @@ async def create_admin_file_upload(
     ip_address: str | None = None,
     user_agent: str | None = None,
 ) -> FileRecord:
-    _validate_file_type(file_type)
-    original_filename = safe_original_filename(upload.filename)
-    mime_type = upload.content_type or ""
-    extension = _validate_extension_and_mime(original_filename, mime_type, file_type)
-    data = await _read_limited_upload(upload)
-
-    settings = get_settings()
-    storage_root = Path(settings.local_storage_root)
-    storage_name = f"{uuid.uuid4()}{extension}"
-    relative_path = Path(file_type) / storage_name
-    absolute_path = storage_root / relative_path
-    checksum = hashlib.sha256(data).hexdigest()
     record: FileRecord | None = None
 
     try:
-        await asyncio.to_thread(_write_bytes, absolute_path, data)
-        record = FileRecord(
+        validated_upload = await read_validated_upload(file_type, upload)
+        record = await create_file_record_from_validated_upload(
+            session=session,
             owner_id=admin_id,
             file_type=file_type,
-            storage_provider="local",
-            storage_path=relative_path.as_posix(),
-            original_filename=original_filename,
-            mime_type=mime_type,
-            size_bytes=len(data),
-            checksum=checksum,
+            upload=validated_upload,
         )
-        session.add(record)
-        await session.flush()
         await create_admin_action_log(
             db=session,
             admin_id=admin_id,
@@ -183,5 +230,5 @@ async def create_admin_file_upload(
     except Exception:
         await session.rollback()
         if record is not None:
-            await _remove_file(absolute_path)
+            await remove_stored_file(record)
         raise

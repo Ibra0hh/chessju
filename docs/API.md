@@ -125,3 +125,26 @@ recompute all-time snapshots with `season_id: null` or recompute a specific seas
 
 The home endpoint now fills `leaderboard_preview` from the top five public leaderboard snapshot rows.
 If no matching snapshot exists, the preview is an empty list.
+
+Phase 8 PGN game-library endpoints:
+
+- `POST /api/v1/games/pgn/paste`
+- `POST /api/v1/games/pgn/upload`
+- `GET /api/v1/games`
+- `GET /api/v1/games/{game_id}`
+- `GET /api/v1/games/{game_id}/moves`
+- `GET /api/v1/pgn-imports`
+- `GET /api/v1/admin/games`
+- `GET /api/v1/admin/pgn-imports`
+
+PGN paste and upload require authentication. The backend parses the first PGN game with
+`python-chess`, stores one `games` row, stores ordered `game_moves`, and returns a normalized
+analysis-board response with metadata, initial/final FEN, SAN, UCI, FEN before/after, comments, and
+check/checkmate flags.
+
+`GET /api/v1/games` returns the current user's uploaded PGN games plus tournament games where the
+user is white or black. `GET /api/v1/games/{game_id}` and `/moves` enforce the same object-level
+authorization. Admin users can list all games and imports through the admin endpoints.
+
+Phase 8 does not include Stockfish, engine evaluations, best moves, blunder labels, Chess.com
+imports, or public game pages.

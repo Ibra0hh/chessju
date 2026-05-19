@@ -8,6 +8,7 @@ from app.database import check_database_connection
 from app.files.router import router as files_router
 from app.leaderboard.router import router as leaderboard_router
 from app.news.router import router as news_router
+from app.pgn.router import router as pgn_router
 from app.tournaments.router import router as tournaments_router
 from app.users.router import router as users_router
 
@@ -26,6 +27,7 @@ app.include_router(files_router, prefix=settings.api_v1_prefix)
 app.include_router(news_router, prefix=settings.api_v1_prefix)
 app.include_router(tournaments_router, prefix=settings.api_v1_prefix)
 app.include_router(leaderboard_router, prefix=settings.api_v1_prefix)
+app.include_router(pgn_router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["operations"])

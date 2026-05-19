@@ -95,3 +95,25 @@ with a shared `generated_at` timestamp.
 Phase 7 leaderboard scoring uses completed tournament games/results from non-deleted,
 non-cancelled tournaments and approved tournament registrations. Ranking sorts by points, wins,
 draws, games played, then username.
+
+Phase 8 PGN and game-library changes:
+
+- `games.owner_id`
+- `games.metadata`
+- `games.initial_fen`
+- `games.final_fen`
+- `game_moves`
+- `pgn_imports`
+
+`games.owner_id` identifies the user who uploaded/imported a private PGN game. Tournament games keep
+using `white_user_id`, `black_user_id`, `pairing_id`, `round_id`, and `tournament_id`.
+
+`games.metadata` stores PGN headers such as Event, Site, Date, Round, White, Black, Result, ECO,
+Opening, and TimeControl. `initial_fen` and `final_fen` support Flutter board replay.
+
+`game_moves` stores one normalized row per ply with SAN, UCI, FEN before, FEN after,
+check/checkmate flags, comments, side, and move number. Rows are unique by `(game_id, ply_number)`.
+
+`pgn_imports` records paste/file upload imports, status, optional file ID, linked game ID, and
+completion time. Phase 8 parses synchronously in the API request; future background imports can reuse
+this table.

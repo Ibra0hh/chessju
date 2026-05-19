@@ -77,3 +77,24 @@ Not implemented yet:
 - Buchholz
 - Sonneborn-Berger
 - advanced tie-breaks
+
+Phase 8 PGN and game-library security rules:
+
+- PGN paste and upload require authentication
+- PGN paste is limited to 200 KB
+- PGN file upload is limited to 5 MB
+- PGN upload allows `.pgn` and `.txt` with safe text/PGN/octet-stream MIME handling
+- Executable and suspicious upload extensions are rejected
+- Client filenames are sanitized and are not trusted for storage paths
+- Uploaded file responses and game responses do not expose internal storage paths
+- Users can view their own uploaded PGN games
+- Users can view tournament games where they are white or black
+- Admin and super admin users can view all games and PGN import records
+- PGN text is not written to audit logs
+
+Phase 8 analysis-board boundary:
+
+- Backend provides metadata, initial/final FEN, SAN, UCI, FEN before/after, comments, and
+  check/checkmate flags
+- Stockfish, engine evaluation, candidate lines, best moves, accuracy, and blunder labels are not
+  implemented yet
