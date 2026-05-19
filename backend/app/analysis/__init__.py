@@ -1,1 +1,1 @@
-"""Future game analysis module."""
+"""Stockfish-backed game analysis module."""

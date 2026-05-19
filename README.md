@@ -85,6 +85,17 @@ alembic upgrade head
 Local uploads are controlled by `CHESSJU_LOCAL_STORAGE_ROOT`. In Docker development this points to
 `/data/storage` inside the API container and is backed by a Docker volume.
 
+Stockfish analysis settings:
+
+- `CHESSJU_STOCKFISH_PATH`
+- `CHESSJU_STOCKFISH_DEPTH_DEFAULT`
+- `CHESSJU_STOCKFISH_DEPTH_MAX`
+- `CHESSJU_ANALYSIS_MAX_PLIES`
+- `CHESSJU_ANALYSIS_JOB_TIMEOUT_SECONDS`
+
+The worker image installs Stockfish and consumes the Valkey/RQ `analysis` queue. Analysis jobs run
+outside API request handlers.
+
 ## Phase 1 Endpoints
 
 - `GET /health`
@@ -101,12 +112,11 @@ Local URLs:
 
 Implemented backend foundations now include auth/users, admin audit logs, files, news,
 announcements, home content, time controls, tournaments, tournament registration MVP behavior,
-manual rounds, manual pairings, result entry, linked tournament game records, and basic tournament
-standings. The global JU leaderboard foundation now supports seasons, admin recompute, public
-snapshot reads, and home leaderboard preview data. PGN, Stockfish, Chess.com sync, chat, and
-snapshot reads, PGN paste/upload, normalized game moves, authenticated game library endpoints, PGN
-import history, and Flutter-ready analysis-board replay data. Stockfish analysis, Chess.com sync,
-chat, and frontend code are intentionally delayed.
+manual rounds, manual pairings, result entry, linked tournament game records, basic tournament
+standings, the global JU leaderboard, PGN paste/upload, normalized game moves, authenticated game
+library endpoints, PGN import history, Flutter-ready analysis-board replay data, and basic
+Stockfish analysis jobs through the worker. Chess.com sync, chat, frontend code, automatic pairing,
+advanced tie-breaks, and advanced game review behavior are intentionally delayed.
 
 ## Notes
 

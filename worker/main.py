@@ -1,14 +1,20 @@
 import logging
-import time
+
+from redis import Redis
+from rq import Queue, Worker
+
+from app.analysis.queue import ANALYSIS_QUEUE_NAME
+from app.config import get_settings
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
     logger = logging.getLogger("chessju.worker")
-    logger.info("ChessJU worker started in idle foundation mode")
-
-    while True:
-        time.sleep(60)
+    settings = get_settings()
+    connection = Redis.from_url(settings.valkey_url)
+    queue = Queue(ANALYSIS_QUEUE_NAME, connection=connection)
+    logger.info("ChessJU worker started for queue %s", ANALYSIS_QUEUE_NAME)
+    Worker([queue], connection=connection).work()
 
 
 if __name__ == "__main__":

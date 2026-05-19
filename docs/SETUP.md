@@ -21,6 +21,13 @@ Local storage:
 - Docker development uses `/data/storage`, backed by the `chessju_storage` volume.
 - Do not commit local uploaded files or `.env`.
 
+Stockfish analysis:
+
+- `CHESSJU_STOCKFISH_PATH` points to the Stockfish binary.
+- Docker worker development uses `/usr/games/stockfish`.
+- Analysis jobs are queued through Valkey/RQ and processed by the worker service.
+- Do not run Stockfish directly inside API request handlers.
+
 Start local services:
 
 ```powershell

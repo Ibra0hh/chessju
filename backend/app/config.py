@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30
+    stockfish_path: str = "stockfish"
+    stockfish_depth_default: int = 10
+    stockfish_depth_max: int = 16
+    analysis_max_plies: int = 300
+    analysis_job_timeout_seconds: int = 120
 
     model_config = SettingsConfigDict(
         env_file=".env",

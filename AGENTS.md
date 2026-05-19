@@ -52,7 +52,7 @@ ChessJU features:
 - PGN parsing
 - Game library
 - Basic analysis board support
-- Stockfish analysis later
+- Basic Stockfish analysis jobs
 - Chess.com import later
 - Friends/chat later
 - Personalization later
@@ -105,7 +105,7 @@ Backend now:
 - Valkey
 - RQ or another simple Valkey-backed queue after discussion
 - python-chess
-- Stockfish later
+- Stockfish for basic analysis jobs
 - Local filesystem storage first
 - Docker Compose
 - Docker Desktop with WSL2 on Windows
@@ -263,7 +263,7 @@ Delay until later:
 
 - Chat
 - WebSockets
-- Stockfish analysis
+- advanced Stockfish review behavior
 - Chess.com sync
 - automatic Swiss pairing
 - advanced tie-breaks
@@ -322,9 +322,9 @@ Flutter will later use the normalized JSON to render:
 - game details panel
 - highlighted last move
 
-Do not build Stockfish analysis in the first PGN phase.
+The first PGN phase should not include Stockfish analysis.
 
-Stockfish phase later may include:
+The basic Stockfish phase may include:
 
 - analysis_jobs
 - analysis_reports
@@ -337,6 +337,9 @@ Stockfish phase later may include:
 - accuracy estimate
 - evaluation bar support
 - analysis completed event
+
+Advanced review behavior, cloud-scale analysis, and exact Game Review clone behavior remain later
+work.
 
 ## Flutter API Design Rules
 
@@ -495,10 +498,11 @@ Phase 10 PGN:
 - pgn_imports
 - game_moves if needed
 
-Phase 11 Stockfish later:
+Phase 9 Stockfish analysis:
 
 - analysis_jobs
 - analysis_reports
+- analysis_move_evaluations
 
 ## API Rules
 
@@ -564,7 +568,7 @@ The client should refetch full state after receiving most realtime events.
 
 Use a separate worker package.
 
-Worker jobs later:
+Worker jobs include or may later include:
 
 - parse_pgn_file
 - analyze_game_with_stockfish
@@ -659,7 +663,7 @@ Do not build these until Ibrahim explicitly approves the phase:
 
 - Chat
 - WebSocket chat
-- Stockfish analysis
+- advanced Stockfish review behavior
 - Chess.com sync
 - automatic Swiss pairing
 - advanced tie-breaks

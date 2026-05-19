@@ -148,3 +148,26 @@ authorization. Admin users can list all games and imports through the admin endp
 
 Phase 8 does not include Stockfish, engine evaluations, best moves, blunder labels, Chess.com
 imports, or public game pages.
+
+Phase 9 Stockfish analysis endpoints:
+
+- `POST /api/v1/games/{game_id}/analysis`
+- `GET /api/v1/analysis/jobs/{job_id}`
+- `GET /api/v1/games/{game_id}/analysis`
+- `GET /api/v1/analysis/reports/{report_id}`
+- `GET /api/v1/admin/analysis/jobs`
+- `GET /api/v1/admin/analysis/reports`
+
+Analysis requests require authentication and the same object-level game access used by the game
+library. The API creates an `analysis_jobs` row, enqueues a Valkey/RQ job, and returns job status.
+The worker runs Stockfish outside the request/response cycle and stores one report with ordered move
+evaluations.
+
+`POST /api/v1/games/{game_id}/analysis` accepts an optional `depth`. If a queued/running job already
+exists for the same user, game, and depth, the existing job is returned. If a completed report already
+exists for the same game and depth, the completed job is returned instead of creating duplicate work.
+
+Analysis report responses include approximate accuracy, a summary count by side, final evaluation,
+and one row per move with evaluation before/after, best move, short principal variation, centipawn
+loss, and a simple ChessJU classification. They intentionally do not copy Chess.com Game Review
+branding, wording, or proprietary behavior.

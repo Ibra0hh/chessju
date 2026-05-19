@@ -200,6 +200,16 @@ async def set_tournament_status_direct(tournament_id: str, status: str) -> None:
         await session.commit()
 
 
+async def set_tournament_start_direct(tournament_id: str, starts_in_seconds: int) -> None:
+    async with AsyncSessionLocal() as session:
+        tournament = await session.get(Tournament, uuid.UUID(tournament_id))
+        assert tournament is not None
+        starts_at = utc_now() + timedelta(seconds=starts_in_seconds)
+        tournament.starts_at = starts_at
+        tournament.ends_at = starts_at + timedelta(hours=3)
+        await session.commit()
+
+
 def test_admin_can_create_time_control() -> None:
     admin_data = register_admin()
     time_control = create_time_control(admin_data)
@@ -590,6 +600,7 @@ def test_home_includes_upcoming_tournaments() -> None:
         slug=f"home-open-{unique_suffix()}",
         starts_in_minutes=2,
     )
+    asyncio.run(set_tournament_start_direct(tournament["id"], starts_in_seconds=5))
 
     response = client.get("/api/v1/home")
 

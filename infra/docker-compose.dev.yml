@@ -22,16 +22,19 @@ services:
 
   worker:
     build:
-      context: ../worker
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: worker/Dockerfile
     env_file:
       - ../.env.example
     environment:
       CHESSJU_DATABASE_URL: postgresql+psycopg://chessju:chessju_dev_password@postgres:5432/chessju
       CHESSJU_VALKEY_URL: redis://valkey:6379/0
       CHESSJU_LOCAL_STORAGE_ROOT: /data/storage
+      CHESSJU_STOCKFISH_PATH: /usr/games/stockfish
+      PYTHONPATH: /workspace/backend:/workspace
     volumes:
-      - ../worker:/app
+      - ../backend:/workspace/backend
+      - ../worker:/workspace/worker
       - chessju_storage:/data/storage
     depends_on:
       postgres:

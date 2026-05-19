@@ -96,5 +96,28 @@ Phase 8 analysis-board boundary:
 
 - Backend provides metadata, initial/final FEN, SAN, UCI, FEN before/after, comments, and
   check/checkmate flags
-- Stockfish, engine evaluation, candidate lines, best moves, accuracy, and blunder labels are not
-  implemented yet
+- Basic Stockfish-backed evaluation is implemented in Phase 9; richer review UX and advanced
+  engine behavior are still later work
+
+Phase 9 Stockfish analysis security rules:
+
+- Analysis requests require authentication
+- Users can request and view analysis only for games they are allowed to view
+- Admin and super admin users can view all analysis jobs and reports
+- Users cannot analyze another user's private uploaded PGN game
+- The API only enqueues analysis jobs; Stockfish does not run inside normal API request handlers
+- Failed jobs store safe error messages, not stack traces or secrets
+- Analysis limits are controlled by environment settings for depth, maximum plies, and job timeout
+- Analysis endpoints should be rate-limited in a later hardening phase
+
+Phase 9 analysis output is approximate:
+
+- Move classification is a simple ChessJU centipawn-loss model
+- Accuracy is an approximate internal estimate
+- The feature does not copy Chess.com Game Review branding, wording, assets, or proprietary behavior
+
+Not implemented yet:
+
+- Chess.com sync
+- cloud-scale engine execution
+- exact Game Review clone behavior

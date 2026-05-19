@@ -117,3 +117,24 @@ check/checkmate flags, comments, side, and move number. Rows are unique by `(gam
 `pgn_imports` records paste/file upload imports, status, optional file ID, linked game ID, and
 completion time. Phase 8 parses synchronously in the API request; future background imports can reuse
 this table.
+
+Phase 9 Stockfish analysis tables:
+
+- `analysis_jobs`
+- `analysis_reports`
+- `analysis_move_evaluations`
+
+`analysis_jobs` stores queued, running, completed, failed, and cancelled analysis requests. Each job
+belongs to a game and requesting user, stores engine/depth settings, and records start/completion
+timestamps plus a safe failure message when needed.
+
+`analysis_reports` stores one generated report for an analysis job with summary JSON, approximate
+white/black accuracy, final evaluation, and creation time.
+
+`analysis_move_evaluations` stores one row per analyzed game move. Rows include the linked
+`game_moves` row, ply number, side, SAN, UCI, evaluation before/after, best move, short principal
+variation, centipawn loss, and ChessJU's basic move classification. Rows are unique by
+`(analysis_report_id, ply_number)`.
+
+Analysis jobs are created by the API and processed by the worker through Valkey/RQ. Stockfish output
+is stored in PostgreSQL; Valkey is only the transient queue transport.
